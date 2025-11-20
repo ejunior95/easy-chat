@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './EasyChat.css';
 
-// --- Interfaces (Iguais ao anterior) ---
 interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -24,14 +23,12 @@ interface EasyChatProps {
   config?: EasyChatConfig;
 }
 
-// --- Componente ---
-
 const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   const {
     position = 'bottom-right',
     title = 'Chat Suporte',
     primaryColor = '#007bff',
-    initialMessage = 'Olá! Como posso ajudar?',
+    initialMessage = 'Olá, visitante! Como posso ser útil ?',
     systemPrompt = 'Você é um assistente útil.',
     api = { 
       useProxy: true, 
@@ -39,9 +36,11 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     }
   } = config || {};
 
+  const MAX_CHARS = 100;
+
   // Estados
   const [isOpen, setIsOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false); // NOVO: Controla animação de saída
+  const [isClosing, setIsClosing] = useState(false);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -54,22 +53,19 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
 
-  // --- NOVO: Função para abrir ---
   const openChat = () => {
     setIsOpen(true);
     setIsClosing(false);
   };
 
-  // --- NOVO: Função para fechar com animação ---
   const closeChat = () => {
-    setIsClosing(true); // 1. Ativa classe CSS de saída
+    setIsClosing(true);
     setTimeout(() => {
-      setIsOpen(false); // 2. Remove do DOM após 300ms
+      setIsOpen(false);
       setIsClosing(false);
-    }, 300); // Deve bater com o tempo do CSS (--ec-anim-duration)
+    }, 300);
   };
 
-  // Função de alternar (para o botão)
   const toggleChat = () => {
     if (isOpen) {
       closeChat();
@@ -133,14 +129,20 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     }
   };
 
+  // Função auxiliar para classe do contador
+  const getCounterClass = () => {
+    if (input.length >= MAX_CHARS) return 'ec-limit-reached';
+    if (input.length >= MAX_CHARS * 0.9) return 'ec-limit-near';
+    return '';
+  };
+
   const customStyle = { '--ec-primary-color': primaryColor } as React.CSSProperties;
 
   return (
     <div className={`ec-container ec-${position}`} style={customStyle}>
       
-      {/* A Janela só é renderizada se isOpen for true OU se estiver fechando (para mostrar animação final) */}
+      {/* Janela do chat */}
       {(isOpen || isClosing) && (
-        // Adicionamos a classe 'ec-closing' se o estado for true
         <div className={`ec-window ${isClosing ? 'ec-closing' : ''}`}>
           
           <div className="ec-header">
@@ -170,23 +172,31 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="ec-input-area">
-            <input 
-              type="text" 
-              placeholder="Digite..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              disabled={isLoading}
-            />
-            <button onClick={handleSend} disabled={isLoading || !input.trim()}>
-              ➤
-            </button>
+          <div className="ec-footer">
+            <div className="ec-input-wrapper">
+              <input 
+                type="text" 
+                placeholder="Digite aqui sua pergunta..."
+                value={input}
+                maxLength={MAX_CHARS} // Trava o input
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                disabled={isLoading}
+              />
+              <button onClick={handleSend} disabled={isLoading || !input.trim()}>
+                ➤
+              </button>
+            </div>
+            
+            {/* O Contador */}
+            <div className={`ec-char-counter ${getCounterClass()}`}>
+              {input.length}/{MAX_CHARS} caracteres
+            </div>
           </div>
         </div>
       )}
 
-      {/* Botão Redondo: Só aparece se a janela NÃO estiver aberta (e nem fechando) */}
+      {/* Botão flutuante*/}
       {!isOpen && !isClosing && (
         <button className="ec-launcher" onClick={openChat}>
           <span>💬</span>

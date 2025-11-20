@@ -11,7 +11,7 @@
 /* Container principal */
 .ec-container {
     position: fixed;
-    z-index: 9999;
+    z-index: 2147483647;
     display: flex;
     flex-direction: column;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -51,6 +51,61 @@
     align-items: flex-start;
     flex-direction: column-reverse;
 }
+
+.ec-footer {
+    background-color: white;
+    border-top: 1px solid #eee;
+    padding: 10px;
+    display: flex;
+    flex-direction: column; /* Coluna para o contador ficar embaixo */
+    gap: 5px;
+  }
+  
+  .ec-input-wrapper {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .ec-footer input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 24px;
+    outline: none;
+    font-size: 14px;
+  }
+  
+  .ec-footer input:focus { border-color: var(--ec-primary-color); }
+  
+  .ec-footer button {
+    background-color: transparent;
+    border: none;
+    color: var(--ec-primary-color);
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 10px;
+  }
+  
+  .ec-footer button:disabled { color: #ccc; }
+
+  .ec-char-counter {
+    font-size: 11px;
+    color: #999;
+    text-align: left; /* Alinha à esquerda */
+    margin-left: 5px;
+  }
+  
+  /* Se o usuário chegar perto do limite, muda a cor para avisar */
+  .ec-char-counter.ec-limit-near {
+    color: #d6be0c; /* Amarelo */
+    font-weight: bold;
+  }
+  
+  .ec-char-counter.ec-limit-reached {
+    color: #ff1900; /* Vermelho */
+    font-weight: bolder;
+  }
 
 /* Botão Flutuante */
 .ec-launcher {

@@ -12,9 +12,7 @@ function App() {
         config={{
           title: "Assistente Lume",
           position: "bottom-right",
-          systemPrompt: "Seu nome é Lume e é um assistente útil e amigável de uma loja de materiais de construção.",
-          // Não preciso passar api.proxyUrl pois já deixei como padrão no componente,
-          // mas em produção o usuário poderia sobrescrever se quisesse.
+          systemPrompt: "Seu nome é Lume e é um assistente útil e amigável de uma loja de materiais de construção BoaCasa.",
         }} 
       />
     </div>
