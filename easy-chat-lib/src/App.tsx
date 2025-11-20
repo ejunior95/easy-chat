@@ -1,35 +1,24 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import EasyChat from './components/EasyChat';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div style={{ padding: '20px', fontFamily: 'Arial' }}>
+      <h1>Teste da Minha Lib: Easy Chat</h1>
+      <p>O botão deve aparecer no canto inferior direito.</p>
+      <p>Tente conversar com ele!</p>
+
+      {/* Instanciando o chat */}
+      <EasyChat 
+        config={{
+          title: "Assistente Lume",
+          position: "bottom-right",
+          systemPrompt: "Seu nome é Lume e é um assistente útil e amigável de uma loja de materiais de construção.",
+          // Não preciso passar api.proxyUrl pois já deixei como padrão no componente,
+          // mas em produção o usuário poderia sobrescrever se quisesse.
+        }} 
+      />
+    </div>
+  );
 }
 
-export default App
+export default App;

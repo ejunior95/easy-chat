@@ -1,0 +1,284 @@
+:root {
+    --ec-primary-color: #007bff;
+    --ec-text-color: #333;
+    --ec-bg-color: #ffffff;
+    --ec-chat-width: 350px;
+    --ec-chat-height: 500px;
+    --ec-anim-duration: 0.3s;
+    /* Tempo da animação */
+}
+
+/* Container principal */
+.ec-container {
+    position: fixed;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    pointer-events: none;
+    /* Permite clicar através da área vazia ao redor */
+}
+
+/* Onde houver conteúdo (janela ou botão), reabilitamos o clique */
+.ec-window,
+.ec-launcher {
+    pointer-events: auto;
+}
+
+/* Posições */
+.ec-bottom-right {
+    bottom: 20px;
+    right: 20px;
+    align-items: flex-end;
+}
+
+.ec-bottom-left {
+    bottom: 20px;
+    left: 20px;
+    align-items: flex-start;
+}
+
+.ec-top-right {
+    top: 20px;
+    right: 20px;
+    align-items: flex-end;
+    flex-direction: column-reverse;
+}
+
+.ec-top-left {
+    top: 20px;
+    left: 20px;
+    align-items: flex-start;
+    flex-direction: column-reverse;
+}
+
+/* Botão Flutuante */
+.ec-launcher {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--ec-primary-color);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background-color 0.2s;
+    margin-top: 15px;
+    animation: ec-scaleIn 0.3s ease-out;
+}
+
+.ec-launcher:hover {
+    transform: scale(1.1);
+}
+
+.ec-launcher span {
+    font-size: 30px;
+    color: white;
+}
+
+/* Janela do Chat */
+.ec-window {
+    width: var(--ec-chat-width);
+    height: var(--ec-chat-height);
+    background-color: var(--ec-bg-color);
+    border-radius: 16px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #e1e1e1;
+    margin-bottom: 15px;
+
+    /* Animação de Entrada Padrão */
+    animation: ec-slideUpFadeIn var(--ec-anim-duration) ease-out forwards;
+    transform-origin: bottom right;
+}
+
+/* Classe aplicada via JS quando estiver fechando */
+.ec-window.ec-closing {
+    animation: ec-slideDownFadeOut var(--ec-anim-duration) ease-in forwards;
+}
+
+/* --- Animações (Keyframes) --- */
+
+@keyframes ec-slideUpFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes ec-slideDownFadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+}
+
+@keyframes ec-scaleIn {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+/* --- Responsividade (Mobile) --- */
+@media (max-width: 480px) {
+    /* .ec-container {
+      
+      bottom: 0 !important;
+      right: 0 !important;
+      left: 0 !important;
+      top: auto !important;
+      align-items: center;
+      width: 100%;
+      padding: 0;
+    } */
+
+    .ec-window {
+        /* A janela agora ganha position fixed para "fugir" do container pai
+           e ocupar a tela inteira, independente da posição do botão */
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+
+        margin: 0;
+        border-radius: 0;
+        /* Remove bordas arredondadas no full screen */
+        z-index: 10000;
+        /* Garante que fique acima de tudo */
+    }
+
+    /* Ajusta a animação no mobile para vir de baixo total */
+    @keyframes ec-slideUpFadeIn {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes ec-slideDownFadeOut {
+        from {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        to {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+    }
+}
+
+/* Restante dos estilos internos (Header, Body, Input) iguais... */
+.ec-header {
+    background-color: var(--ec-primary-color);
+    color: white;
+    padding: 16px;
+    font-weight: 600;
+    font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ec-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #f9f9f9;
+}
+
+.ec-message {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.ec-message-user {
+    align-self: flex-end;
+    background-color: var(--ec-primary-color);
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+
+.ec-message-assistant {
+    align-self: flex-start;
+    background-color: #e9ecef;
+    color: var(--ec-text-color);
+    border-bottom-left-radius: 2px;
+}
+
+.ec-message-error {
+    align-self: center;
+    background-color: #ffebee;
+    color: #c62828;
+    font-size: 12px;
+    text-align: center;
+}
+
+.ec-input-area {
+    padding: 10px;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+    background-color: white;
+}
+
+.ec-input-area input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 24px;
+    outline: none;
+    font-size: 14px;
+}
+
+.ec-input-area input:focus {
+    border-color: var(--ec-primary-color);
+}
+
+.ec-input-area button {
+    background-color: transparent;
+    border: none;
+    color: var(--ec-primary-color);
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 10px;
+}
+
+.ec-input-area button:disabled {
+    color: #ccc;
+}
