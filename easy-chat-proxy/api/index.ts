@@ -6,6 +6,30 @@ interface ChatRequestBody {
   systemPrompt?: string;
 }
 
+// --- Validação ---
+function isValidContent(text: string): boolean {
+  const trimmed = text.trim();
+
+  // 1. Regra de tamanho mínimo
+  if (trimmed.length < 2) return false; // "Oi" passa, "a" não.
+
+  // 2. Regra de SÓ Números (Bloqueia se tiver mais de 5 dígitos apenas numéricos)
+  // Permite "2024" ou "123", mas bloqueia "2813797321"
+  const isOnlyNumbers = /^\d+$/.test(trimmed);
+  if (isOnlyNumbers && trimmed.length > 5) return false;
+
+  // 3. Regra de Caracteres Repetidos (Ex: "kkkkkkkkkk", "aaaaaaa")
+  // Bloqueia se o mesmo caractere se repetir mais de 4 vezes seguidas
+  if (/(.)\1{4,}/.test(trimmed)) return false;
+
+  // 4. Regra de "Smashing" (Palavras gigantes sem espaço)
+  // Se tiver mais de 20 caracteres e NENHUM espaço, provavel que seja lixo
+  // Ex: "asdfghjklpoiuytrewqasdfghjkl"
+  if (trimmed.length > 20 && !/\s/.test(trimmed)) return false;
+
+  return true;
+}
+
 export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
@@ -31,8 +55,19 @@ export default async function handler(
 
     const { messages, systemPrompt } = request.body as ChatRequestBody;
 
-    if (!messages || !Array.isArray(messages)) {
-      return response.status(400).json({ error: 'request body must have an array' });
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return response.status(400).json({ error: 'Chat history invalid: request body must have an array' });
+    }
+
+    const lastMessage = messages[messages.length - 1];
+    const refusalMessage = "Desculpe, mas sua mensagem ou o systemPrompt não são válidos (detectamos spam ou caracteres aleatórios). Tente novamente com uma frase coerente.";
+
+    // Valida o conteúdo do usuário
+    if (lastMessage.role === 'user' && !isValidContent(String(lastMessage.content))) {
+      return response.status(200).json({ content: refusalMessage });
+    }
+    if (systemPrompt && !isValidContent(systemPrompt)) {
+       return response.status(200).json({ content: refusalMessage });
     }
 
     const defaultSystemPrompt = "Você é um assistente virtual amigável e útil.";
