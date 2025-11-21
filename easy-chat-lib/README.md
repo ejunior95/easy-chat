@@ -1,73 +1,115 @@
-# React + TypeScript + Vite
+# 💬 Easy Chat
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![NPM Version](https://img.shields.io/npm/v/@ejunior95/easy-chat?style=flat-square&color=blue)
+![License](https://img.shields.io/npm/l/@ejunior95/easy-chat?style=flat-square)
+![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue?style=flat-square&logo=typescript)
 
-Currently, two official plugins are available:
+**The secure, plug-and-play AI Chat Widget for React.**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Add a ChatGPT-powered assistant to your application in seconds, without exposing your API Keys.
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- 🚀 **Plug & Play:** Simple React component, easy to install.
+- 🔒 **Security First:** Built-in support for Proxy/Backend architecture (hide your OpenAI API Key).
+- 📱 **Fully Responsive:** optimizing UX for mobile devices (Full-screen mode).
+- 🎨 **Customizable:** Control colors, positions, titles, and initial messages.
+- 🧠 **Smart Context:** Define your bot's personality with custom `systemPrompts`.
+- 🛡️ **Spam Protection:** (If using the companion proxy) Built-in validation against spam and nonsense inputs.
+- 🟦 **Type-Safe:** Written in TypeScript with full type definitions.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 📦 Installation
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install @ejunior95/easy-chat
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Quick Start
+1. Import the component and the **CSS styles.**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+2. Pass your configuration.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```typescript
+import React from 'react';
+import { EasyChat } from '@ejunior95/easy-chat';
+import '@ejunior95/easy-chat/dist/style.css'; // ⚠️ Don't forget the CSS!
+
+function App() {
+  return (
+    <div className="App">
+      <h1>My Awesome App</h1>
+      
+      <EasyChat 
+        config={{
+          title: "AI Support",
+          position: "bottom-right",
+          primaryColor: "#007bff",
+          systemPrompt: "You are a helpful and sarcastic assistant.",
+          api: {
+            useProxy: true,
+            // Your secure backend URL (Recommended for Production)
+            proxyUrl: "[https://your-proxy-url.vercel.app/api](https://your-proxy-url.vercel.app/api)" 
+          }
+        }} 
+      />
+    </div>
+  );
+}
+
+export default App;
 ```
+
+## ⚙️ Configuration
+
+The `config` prop accepts an object with the following properties:
+
+| Property | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `title` | `string` | `'Chat Suporte'` | The title displayed in the chat header. |
+| `position` | `string` | `'bottom-right'` | Positions: `'bottom-right'`, `'bottom-left'`, `'top-right'`, `'top-left'`. |
+| `primaryColor` | `string` | `'#007bff'` | Hex code for the main color (button and user bubbles). |
+| `initialMessage` | `string` | `'Olá! ...'` | The first message sent by the bot. |
+| `systemPrompt` | `string` | `'You are...'` | Defines the AI's behavior and personality. |
+| `api` | `object` | `{}` | Configuration for the connection (see below). |
+
+#### API Configuration (`config.api`)
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `useProxy` | `boolean` | Set `true` to use your secure backend (Recommended). |
+| `proxyUrl` | `string` | The URL of your proxy server (if `useProxy` is true). |
+| `apiKey` | `string` | Your OpenAI API Key. **(Use only for local testing. Do not use in production).** |
+
+## 🔒 Architecture & Security
+
+Unlike other libraries that force you to expose your `OPENAI_API_KEY` on the frontend (which is dangerous), **Easy Chat** is designed to work with a simple Proxy Server.
+
+**How to set up the Proxy?**
+You can create a simple Vercel Function or Node.js server to act as a middleman.
+
+**Request Format expected by Easy Chat:**
+
+```json
+POST /your-proxy-endpoint
+{
+  "messages": [...], // Array of message history
+  "systemPrompt": "..." 
+}
+```
+
+**Response Format:**
+
+```json
+{
+  "content": "The AI response text..."
+}
+```
+
+## 📱 Mobile Behavior
+
+On mobile devices, **Easy Chat** automatically transforms into a full-screen experience for better accessibility and usability. It also includes smooth entry/exit animations
+
+## 📄 License
+This is an open-source project and license [Licença MIT](LICENSE).

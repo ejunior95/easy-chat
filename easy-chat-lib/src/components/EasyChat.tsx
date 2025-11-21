@@ -66,14 +66,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     }, 300);
   };
 
-  const toggleChat = () => {
-    if (isOpen) {
-      closeChat();
-    } else {
-      openChat();
-    }
-  };
-
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
