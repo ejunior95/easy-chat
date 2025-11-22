@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     dts({ 
-      insertTypesEntry: true, // Gera os tipos automaticamente no package.json
+      insertTypesEntry: true,
     }),
   ],
   build: {
@@ -17,7 +17,7 @@ export default defineConfig({
       fileName: (format) => `easy-chat.${format}.js`,
     },
     rollupOptions: {
-      external: ['react', 'react-dom'],
+      external: ['react', 'react-dom', 'react/jsx-runtime'],
       output: {
         globals: {
           react: 'React',
