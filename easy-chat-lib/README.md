@@ -11,11 +11,13 @@ Add a ChatGPT-powered assistant to your application in seconds, without exposing
 ## ✨ Features
 
 - 🚀 **Plug & Play:** Simple React component, easy to install.
+- 📝 **Markdown Support:** Bot responses are rendered with Markdown (code blocks, bold, lists, etc).
+- 🌗 **Themeable:** Built-in **Dark**, **Light**, and **System** modes.
 - 🔒 **Security First:** Built-in support for Proxy/Backend architecture (hide your OpenAI API Key).
-- 📱 **Fully Responsive:** optimizing UX for mobile devices (Full-screen mode).
-- 🎨 **Customizable:** Control colors, positions, titles, and initial messages.
+- 📱 **Fully Responsive:** Mobile-optimized UX with full-screen mode and smooth animations.
 - 🧠 **Smart Context:** Define your bot's personality with custom `systemPrompts`.
-- 🛡️ **Spam Protection:** (If using the companion proxy) Built-in validation against spam and nonsense inputs.
+- 💾 **History Tracking:** Access the chat history in real-time via callback.
+- 🛡️ **Spam Protection:** (If using the companion proxy) Built-in validation against spam.
 - 🟦 **Type-Safe:** Written in TypeScript with full type definitions.
 
 ---
@@ -37,6 +39,10 @@ import { EasyChat } from '@ejunior95/easy-chat';
 import '@ejunior95/easy-chat/dist/style.css'; // ⚠️ Don't forget the CSS!
 
 function App() {
+  const handleHistoryChange = (messages) => {
+    console.log("Current Chat History:", messages);
+  };
+
   return (
     <div className="App">
       <h1>My Awesome App</h1>
@@ -46,7 +52,9 @@ function App() {
           title: "AI Support",
           position: "bottom-right",
           primaryColor: "#007bff",
+          theme: "system", // 'light', 'dark' or 'system'
           systemPrompt: "You are a helpful and sarcastic assistant.",
+          onHistoryChange: handleHistoryChange, // Get messages in real-time
           api: {
             useProxy: true,
             // Your secure backend URL (Recommended for Production)
@@ -69,9 +77,11 @@ The `config` prop accepts an object with the following properties:
 | :--- | :--- | :--- | :--- |
 | `title` | `string` | `'Chat Suporte'` | The title displayed in the chat header. |
 | `position` | `string` | `'bottom-right'` | Positions: `'bottom-right'`, `'bottom-left'`, `'top-right'`, `'top-left'`. |
+| `theme` | `string` | `system` | Color theme: `light`, `dark`, or `system` (auto-detect). |
 | `primaryColor` | `string` | `'#007bff'` | Hex code for the main color (button and user bubbles). |
 | `initialMessage` | `string` | `'Olá! ...'` | The first message sent by the bot. |
 | `systemPrompt` | `string` | `'You are...'` | Defines the AI's behavior and personality. |
+| `onHistoryChange` | `function` | `undefined` | Callback function that receives the array of messages `(msgs) => void`. |
 | `api` | `object` | `{}` | Configuration for the connection (see below). |
 
 #### API Configuration (`config.api`)
@@ -81,6 +91,17 @@ The `config` prop accepts an object with the following properties:
 | `useProxy` | `boolean` | Set `true` to use your secure backend (Recommended). |
 | `proxyUrl` | `string` | The URL of your proxy server (if `useProxy` is true). |
 | `apiKey` | `string` | Your OpenAI API Key. **(Use only for local testing. Do not use in production).** |
+
+## 🎨 Themes & Customization
+**Easy Chat** supports Markdown rendering out of the box, meaning code blocks and lists sent by the AI will look great.
+
+Regarding colors, you can force a theme or let the widget respect the user's OS preference:
+
+* `theme: 'light'` - Always light mode.
+
+* `theme: 'dark'` - Always dark mode.
+
+* `theme: 'system'` - Detects `prefers-color-scheme` from the browser.
 
 ## 🔒 Architecture & Security
 
@@ -109,7 +130,7 @@ POST /your-proxy-endpoint
 
 ## 📱 Mobile Behavior
 
-On mobile devices, **Easy Chat** automatically transforms into a full-screen experience for better accessibility and usability. It also includes smooth entry/exit animations
+On mobile devices, **Easy Chat** automatically transforms into a full-screen experience for better accessibility and usability. It includes smooth entry/exit animations and supports "Click Outside" to close (on desktop).
 
 ## 📄 License
-This is an open-source project and license [Licença MIT](LICENSE).
+This is an open-source project under the [MIT License](LICENSE).

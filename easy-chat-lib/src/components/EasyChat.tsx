@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import './EasyChat.css';
 
 interface Message {
@@ -12,6 +13,8 @@ export interface EasyChatConfig {
   primaryColor?: string;
   initialMessage?: string;
   systemPrompt?: string;
+  theme?: 'light' | 'dark' | 'system';
+  onHistoryChange?: (messages: Message[]) => void;
   api?: {
     useProxy?: boolean;
     proxyUrl?: string;
@@ -30,28 +33,61 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     primaryColor = '#007bff',
     initialMessage = 'Olá, visitante! Como posso ser útil ?',
     systemPrompt = 'Você é um assistente útil.',
-    api = { 
-      useProxy: true, 
-      proxyUrl: 'https://easy-chat-brown.vercel.app/api' 
+    theme = 'system',
+    onHistoryChange,
+    api = {
+      useProxy: true,
+      proxyUrl: 'https://easy-chat-brown.vercel.app/api'
     }
   } = config || {};
 
   const MAX_CHARS = 100;
-
-  // Estados
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: initialMessage }
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatWindowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
+
+  useEffect(() => {
+    if (onHistoryChange) {
+      onHistoryChange(messages);
+    }
+  }, [messages, onHistoryChange]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (isOpen && chatWindowRef.current && !chatWindowRef.current.contains(event.target as Node)) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.ec-launcher')) {
+          closeChat();
+        }
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const getThemeClass = () => {
+    if (theme === 'dark') return 'ec-theme-dark';
+    if (theme === 'light') return '';
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'ec-theme-dark';
+    }
+    return '';
+  };
 
   const openChat = () => {
     setIsOpen(true);
@@ -129,18 +165,19 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   };
 
   const customStyle = { '--ec-primary-color': primaryColor } as React.CSSProperties;
+  const themeClass = getThemeClass();
 
   return (
-    <div className={`ec-container ec-${position}`} style={customStyle}>
-      
+    <div className={`ec-container ec-${position} ${themeClass}`} style={customStyle}>
+
       {/* Janela do chat */}
       {(isOpen || isClosing) && (
-        <div className={`ec-window ${isClosing ? 'ec-closing' : ''}`}>
-          
+        <div className={`ec-window ${isClosing ? 'ec-closing' : ''}`} ref={chatWindowRef}>
+
           <div className="ec-header">
             <span>{title}</span>
-            <button 
-              onClick={closeChat} 
+            <button
+              onClick={closeChat}
               style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '20px' }}
               aria-label="Fechar chat"
             >
@@ -152,22 +189,30 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
             {messages.map((msg, idx) => (
               msg.role !== 'system' && (
                 <div key={idx} className={`ec-message ec-message-${msg.role}`}>
-                  {msg.content}
+
+                  {msg.role === 'assistant' ? (
+                    <div className="ec-markdown">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    msg.content
+                  )}
+
                 </div>
               )
             ))}
             {messages.filter(m => m.role === 'system').map((msg, idx) => (
-               <div key={`sys-${idx}`} className="ec-message ec-message-error">{msg.content}</div>
+              <div key={`sys-${idx}`} className="ec-message ec-message-error">{msg.content}</div>
             ))}
-            
+
             {isLoading && <div className="ec-message ec-message-assistant">Digitando...</div>}
             <div ref={messagesEndRef} />
           </div>
 
           <div className="ec-footer">
             <div className="ec-input-wrapper">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Digite aqui sua pergunta..."
                 value={input}
                 maxLength={MAX_CHARS} // Trava o input
@@ -179,7 +224,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
                 ➤
               </button>
             </div>
-            
+
             {/* O Contador */}
             <div className={`ec-char-counter ${getCounterClass()}`}>
               {input.length}/{MAX_CHARS} caracteres

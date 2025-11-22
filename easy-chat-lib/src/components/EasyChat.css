@@ -1,12 +1,23 @@
 :root {
     --ec-primary-color: #007bff;
-    --ec-text-color: #333;
     --ec-bg-color: #ffffff;
+    --ec-text-color: #333333;
+    --ec-secondary-bg: #f9f9f9;
+    --ec-input-bg: #ffffff;
+    --ec-border-color: #e1e1e1;
+    
     --ec-chat-width: 350px;
     --ec-chat-height: 500px;
     --ec-anim-duration: 0.3s;
-    /* Tempo da animação */
 }
+
+.ec-theme-dark {
+    --ec-bg-color: #1e1e1e;
+    --ec-text-color: #f0f0f0;
+    --ec-secondary-bg: #2d2d2d;
+    --ec-input-bg: #2d2d2d;
+    --ec-border-color: #444444;
+  }
 
 /* Container principal */
 .ec-container {
@@ -16,10 +27,7 @@
     flex-direction: column;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     pointer-events: none;
-    /* Permite clicar através da área vazia ao redor */
 }
-
-/* Onde houver conteúdo (janela ou botão), reabilitamos o clique */
 .ec-window,
 .ec-launcher {
     pointer-events: auto;
@@ -53,11 +61,11 @@
 }
 
 .ec-footer {
-    background-color: white;
-    border-top: 1px solid #eee;
+    background-color: var(--ec-bg-color);
+    border-top: 1px solid var(--ec-border-color);
     padding: 10px;
     display: flex;
-    flex-direction: column; /* Coluna para o contador ficar embaixo */
+    flex-direction: column;
     gap: 5px;
   }
   
@@ -70,10 +78,12 @@
   .ec-footer input {
     flex: 1;
     padding: 12px;
-    border: 1px solid #ddd;
     border-radius: 24px;
     outline: none;
     font-size: 14px;
+    background-color: var(--ec-input-bg);
+    color: var(--ec-text-color);
+    border: 1px solid var(--ec-border-color);
   }
   
   .ec-footer input:focus { border-color: var(--ec-primary-color); }
@@ -92,11 +102,10 @@
   .ec-char-counter {
     font-size: 11px;
     color: #999;
-    text-align: left; /* Alinha à esquerda */
+    text-align: left;
     margin-left: 5px;
   }
   
-  /* Se o usuário chegar perto do limite, muda a cor para avisar */
   .ec-char-counter.ec-limit-near {
     color: #d6be0c; /* Amarelo */
     font-weight: bold;
@@ -137,18 +146,19 @@
 .ec-window {
     width: var(--ec-chat-width);
     height: var(--ec-chat-height);
-    background-color: var(--ec-bg-color);
     border-radius: 16px;
     box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid #e1e1e1;
     margin-bottom: 15px;
 
     /* Animação de Entrada Padrão */
     animation: ec-slideUpFadeIn var(--ec-anim-duration) ease-out forwards;
     transform-origin: bottom right;
+    background-color: var(--ec-bg-color);
+    color: var(--ec-text-color);
+    border: 1px solid var(--ec-border-color);
 }
 
 /* Classe aplicada via JS quando estiver fechando */
@@ -194,20 +204,8 @@
 
 /* --- Responsividade (Mobile) --- */
 @media (max-width: 480px) {
-    /* .ec-container {
-      
-      bottom: 0 !important;
-      right: 0 !important;
-      left: 0 !important;
-      top: auto !important;
-      align-items: center;
-      width: 100%;
-      padding: 0;
-    } */
 
     .ec-window {
-        /* A janela agora ganha position fixed para "fugir" do container pai
-           e ocupar a tela inteira, independente da posição do botão */
         position: fixed;
         top: 0;
         left: 0;
@@ -220,9 +218,7 @@
 
         margin: 0;
         border-radius: 0;
-        /* Remove bordas arredondadas no full screen */
         z-index: 10000;
-        /* Garante que fique acima de tudo */
     }
 
     /* Ajusta a animação no mobile para vir de baixo total */
@@ -251,7 +247,6 @@
     }
 }
 
-/* Restante dos estilos internos (Header, Body, Input) iguais... */
 .ec-header {
     background-color: var(--ec-primary-color);
     color: white;
@@ -270,7 +265,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background-color: #f9f9f9;
+    background-color: var(--ec-bg-color);
 }
 
 .ec-message {
@@ -291,14 +286,13 @@
 
 .ec-message-assistant {
     align-self: flex-start;
-    background-color: #e9ecef;
+    background-color: var(--ec-secondary-bg);
     color: var(--ec-text-color);
     border-bottom-left-radius: 2px;
 }
 
 .ec-message-error {
     align-self: center;
-    background-color: #ffebee;
     color: #c62828;
     font-size: 12px;
     text-align: center;
@@ -337,3 +331,22 @@
 .ec-input-area button:disabled {
     color: #ccc;
 }
+
+/* --- Markdown Styles --- */
+.ec-markdown p { margin: 0 0 10px 0; }
+.ec-markdown p:last-child { margin-bottom: 0; }
+.ec-markdown code { 
+  background-color: rgba(0,0,0,0.1); 
+  padding: 2px 4px; 
+  border-radius: 4px; 
+  font-family: monospace; 
+}
+.ec-theme-dark .ec-markdown code { background-color: rgba(255,255,255,0.1); }
+.ec-markdown pre { 
+  background-color: #333; 
+  color: #fff; 
+  padding: 10px; 
+  border-radius: 8px; 
+  overflow-x: auto; 
+}
+.ec-markdown ul, .ec-markdown ol { padding-left: 20px; margin: 5px 0; }
