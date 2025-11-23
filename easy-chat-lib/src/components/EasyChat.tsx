@@ -14,6 +14,7 @@ export interface EasyChatConfig {
   initialMessage?: string;
   systemPrompt?: string;
   theme?: 'light' | 'dark' | 'system';
+  language?: 'en' | 'pt';
   apiKey?: string;
   licenseKey?: string;
   onHistoryChange?: (messages: Message[]) => void;
@@ -35,6 +36,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     initialMessage = 'Olá, visitante! Como posso ser útil?',
     systemPrompt = 'Você é um assistente útil.',
     theme = 'system',
+    language = 'pt',
     apiKey,
     licenseKey,
     onHistoryChange,
@@ -195,7 +197,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
             <button
               onClick={closeChat}
               style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '20px' }}
-              aria-label="Fechar chat"
+              aria-label={language === 'pt' ? 'Fechar chat' : 'Close chat'}
             >
               x
             </button>
@@ -223,7 +225,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
               </div>
             ))}
 
-            {isLoading && <div className="ec-message ec-message-assistant">Digitando...</div>}
+            {isLoading && <div className="ec-message ec-message-assistant">{language === 'pt' ? 'Digitando...' : 'Typing...'}</div>}
             <div ref={messagesEndRef} />
           </div>
 
@@ -231,7 +233,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
             <div className="ec-input-wrapper">
               <input
                 type="text"
-                placeholder="Digite aqui sua pergunta..."
+                placeholder={language === 'pt' ? 'Digite aqui sua pergunta...' : 'Type your question here...'}
                 value={input}
                 maxLength={MAX_CHARS}
                 onChange={(e) => setInput(e.target.value)}
@@ -245,7 +247,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
             {/* O Contador */}
             <div className={`ec-char-counter ${getCounterClass()}`}>
-              {input.length}/{MAX_CHARS} caracteres
+              {input.length}/{MAX_CHARS} {language === 'pt' ? 'caracteres' : 'characters'}
             </div>
           </div>
         </div>
