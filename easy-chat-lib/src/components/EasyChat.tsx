@@ -14,11 +14,12 @@ export interface EasyChatConfig {
   initialMessage?: string;
   systemPrompt?: string;
   theme?: 'light' | 'dark' | 'system';
+  apiKey?: string;
+  licenseKey?: string;
   onHistoryChange?: (messages: Message[]) => void;
   api?: {
     useProxy?: boolean;
     proxyUrl?: string;
-    apiKey?: string;
   };
 }
 
@@ -26,20 +27,24 @@ interface EasyChatProps {
   config?: EasyChatConfig;
 }
 
+const DEFAULT_PROXY_URL = 'https://easy-chat-brown.vercel.app/api';
+
 const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   const {
     position = 'bottom-right',
-    title = 'Chat Suporte',
+    title = 'EasyChat',
     primaryColor = '#007bff',
-    initialMessage = 'Olá, visitante! Como posso ser útil ?',
+    initialMessage = 'Olá, visitante! Como posso ser útil?',
     systemPrompt = 'Você é um assistente útil.',
     theme = 'system',
+    apiKey,
+    licenseKey,
     onHistoryChange,
     api = {
       useProxy: true,
       proxyUrl: 'https://easy-chat-brown.vercel.app/api'
     }
-  } = config || {};
+  }: EasyChatConfig = config || {};
 
   const MAX_CHARS = 100;
   const [isOpen, setIsOpen] = useState(false);
@@ -116,6 +121,18 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
       let botResponse = '';
 
       if (api.useProxy && api.proxyUrl) {
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        };
+
+        if (apiKey) {
+          headers['x-custom-api-key'] = apiKey;
+        }
+
+        if (licenseKey) {
+          headers['x-license-key'] = licenseKey;
+        }
         const res = await fetch(api.proxyUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -128,12 +145,12 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
         if (!res.ok) throw new Error(data.error || 'Erro no servidor');
         botResponse = data.content;
 
-      } else if (api.apiKey) {
+      } else if (apiKey) {
         const res = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${api.apiKey}`
+            'Authorization': `Bearer ${apiKey}`
           },
           body: JSON.stringify({
             model: 'gpt-3.5-turbo',
@@ -144,14 +161,15 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
         if (!res.ok) throw new Error(data.error?.message || 'Erro na OpenAI');
         botResponse = data.choices[0].message.content;
       } else {
-        throw new Error('Configuração de API inválida.');
+        throw new Error('Configuração de API inválida. Forneça uma Licença ou API Key.');
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content: botResponse }]);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'system', content: 'Erro ao conectar.' }]);
+      const errorMessage = error.message || 'Erro ao conectar.';
+      setMessages(prev => [...prev, { role: 'system', content: `⚠️ ${errorMessage}` }]);
     } finally {
       setIsLoading(false);
     }
@@ -181,7 +199,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
               style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '20px' }}
               aria-label="Fechar chat"
             >
-              ✕
+              X
             </button>
           </div>
 
@@ -202,7 +220,9 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
               )
             ))}
             {messages.filter(m => m.role === 'system').map((msg, idx) => (
-              <div key={`sys-${idx}`} className="ec-message ec-message-error">{msg.content}</div>
+              <div key={`sys-${idx}`} className="ec-message ec-message-error" style={{fontSize: '0.8rem', color: 'red', textAlign: 'center'}}>
+                {msg.content}
+              </div>
             ))}
 
             {isLoading && <div className="ec-message ec-message-assistant">Digitando...</div>}
@@ -215,7 +235,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
                 type="text"
                 placeholder="Digite aqui sua pergunta..."
                 value={input}
-                maxLength={MAX_CHARS} // Trava o input
+                maxLength={MAX_CHARS}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 disabled={isLoading}
