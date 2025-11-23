@@ -135,7 +135,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
         }
         const res = await fetch(api.proxyUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers,
           body: JSON.stringify({
             messages: newHistory.filter(m => m.role !== 'system'),
             systemPrompt: systemPrompt
