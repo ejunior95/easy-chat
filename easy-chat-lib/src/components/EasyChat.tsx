@@ -27,8 +27,6 @@ interface EasyChatProps {
   config?: EasyChatConfig;
 }
 
-const DEFAULT_PROXY_URL = 'https://easy-chat-brown.vercel.app/api';
-
 const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   const {
     position = 'bottom-right',
