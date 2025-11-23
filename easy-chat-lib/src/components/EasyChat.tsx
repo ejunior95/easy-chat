@@ -197,7 +197,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
               style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '20px' }}
               aria-label="Fechar chat"
             >
-              X
+              x
             </button>
           </div>
 

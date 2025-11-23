@@ -8,12 +8,19 @@ function App() {
       <p>Tente conversar com ele!</p>
 
       {/* Instanciando o chat */}
-      <EasyChat 
+      <EasyChat
         config={{
-          title: "Assistente Lume",
-          position: "bottom-right",
-          systemPrompt: "Seu nome é Lume e é um assistente útil e amigável de uma loja de materiais de construção BoaCasa.",
-        }} 
+          position: 'bottom-right',
+          title: 'EasyChat',
+          primaryColor: '#007bff',
+          initialMessage: 'Olá, visitante! Como posso ser útil?',
+          systemPrompt: 'Você é um assistente útil.',
+          theme: 'system',
+          api: {
+            useProxy: true,
+            proxyUrl: ''
+          }
+        }}
       />
     </div>
   );
