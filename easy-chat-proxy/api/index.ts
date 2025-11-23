@@ -5,13 +5,10 @@ import { MongoClient, Db } from 'mongodb'; // Importamos o cliente Mongo
 let cachedDb: Db | null = null;
 
 async function connectToDatabase(uri: string) {
-  if (cachedDb) {
-    return cachedDb;
-  }
+  if (cachedDb) return cachedDb;
 
-  const client = await MongoClient.connect(uri);
+  const client = await MongoClient.connect(uri, { connectTimeoutMS: 5000 });
   const db = client.db('easychat_logs');
-
   cachedDb = db;
   return db;
 }
@@ -19,6 +16,15 @@ async function connectToDatabase(uri: string) {
 interface ChatRequestBody {
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
   systemPrompt?: string;
+}
+
+
+function getClientIp(req: VercelRequest): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.socket.remoteAddress || 'unknown';
 }
 
 // --- Validação ---
@@ -61,6 +67,32 @@ export default async function handler(
   try {
     const userAgent = request.headers['user-agent'] || 'unknown';
     const originUrl = request.headers['referer'] || request.headers['origin'] || 'unknown';
+    const clientIp = getClientIp(request);
+
+    // --- RATE LIMITING ---
+    try {
+      const db = await connectToDatabase(mongoUri);
+      
+      const lastInteraction = await db.collection('interactions').findOne(
+        { client_ip: clientIp },
+        { sort: { timestamp: -1 }, projection: { timestamp: 1 } }
+      );
+
+      if (lastInteraction) {
+        const lastTime = new Date(lastInteraction.timestamp).getTime();
+        const now = Date.now();
+        const timeDiff = now - lastTime;
+
+        if (timeDiff < 3000) { // 3000ms = 3 segundos
+          console.warn(`Rate Limit Triggered for IP: ${clientIp}`);
+          return response.status(429).json({ 
+            error: "Calma! Você está enviando mensagens muito rápido. Aguarde alguns segundos." 
+          });
+        }
+      }
+    } catch (limitError) {
+      console.error("Erro ao verificar rate limit:", limitError);
+    }
 
     const { messages, systemPrompt } = request.body as ChatRequestBody;
 
@@ -111,6 +143,7 @@ export default async function handler(
         total_tokens: usage?.total_tokens || 0,
         client_user_agent: userAgent,
         client_origin: originUrl,
+        client_ip: clientIp,
         status: 'success',
       });
 
@@ -128,7 +161,8 @@ export default async function handler(
         await db.collection('interactions').insertOne({
           timestamp: new Date(),
           status: 'error',
-          error_message: error.message
+          error_message: error.message,
+          client_ip: getClientIp(request),
         });
       }
     } catch (e) { }
