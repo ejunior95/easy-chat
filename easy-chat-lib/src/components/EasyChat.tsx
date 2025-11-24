@@ -45,6 +45,10 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     api,
   }: EasyChatConfig = config || {};
 
+  // Internal-only secret flag: not exported in the public `EasyChatConfig`.
+  const _internalConfig = config as EasyChatConfig & { isPlayground?: boolean };
+  const isPlayground = _internalConfig?.isPlayground ?? false;
+
   const MAX_CHARS = 100;
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -143,6 +147,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   };
 
   const handleSend = async () => {
+    if (isPlayground) return;
     if (!input.trim() || isLoading) return;
 
     const validation = validateConfig();
@@ -284,10 +289,10 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
                 value={input}
                 maxLength={MAX_CHARS}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !isPlayground) handleSend(); }}
                 disabled={isLoading}
               />
-              <button onClick={handleSend} disabled={isLoading || !input.trim()}>
+              <button onClick={handleSend} disabled={isLoading || !input.trim() || isPlayground}>
                 ➤
               </button>
             </div>
