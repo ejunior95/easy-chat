@@ -1,13 +1,17 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import OpenAI from 'openai';
-import { MongoClient, Db } from 'mongodb'; // Importamos o cliente Mongo
+import { MongoClient, Db } from 'mongodb';
 
 let cachedDb: Db | null = null;
 
 async function connectToDatabase(uri: string) {
   if (cachedDb) return cachedDb;
-
-  const client = await MongoClient.connect(uri, { connectTimeoutMS: 5000 });
+  
+  const client = await MongoClient.connect(uri, { 
+    connectTimeoutMS: 5000,
+    maxPoolSize: 10 
+  });
+  
   const db = client.db('easychat_logs');
   cachedDb = db;
   return db;
@@ -27,14 +31,14 @@ function getClientIp(req: VercelRequest): string {
   return req.socket.remoteAddress || 'unknown';
 }
 
-// --- Validação ---
+// Validação simples anti-spam
 function isValidContent(text: string): boolean {
   if (!text) return false;
   const trimmed = text.trim();
   if (trimmed.length < 1) return false;
-  const isOnlyNumbers = /^\d+$/.test(trimmed);
-  if (isOnlyNumbers && trimmed.length > 6) return false;
-  if (/(.)\1{15,}/.test(trimmed)) return false;
+  // Bloqueia spam numérico ou repetitivo
+  if (/^\d+$/.test(trimmed) && trimmed.length > 6) return false;
+  if (/(.)\1{15,}/.test(trimmed)) return false; 
   if (trimmed.length > 30 && !/\s/.test(trimmed)) return false;
   return true;
 }
@@ -46,7 +50,7 @@ export default async function handler(
 
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-custom-api-key, x-license-key');
 
   if (request.method === 'OPTIONS') {
     return response.status(200).end();
@@ -56,12 +60,33 @@ export default async function handler(
     return response.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  const mongoUri = process.env.MONGODB_URI;
+  const envMongoUri = process.env.MONGODB_URI;
+  const envOpenAiKey = process.env.OPENAI_API_KEY;
 
-  if (!apiKey || !mongoUri) {
-    console.error("Server config error: Missing API keys");
+  if (!envMongoUri || !envOpenAiKey) {
+    console.error("Config Error: Faltam variáveis de ambiente (MONGO ou OPENAI).");
     return response.status(500).json({ error: 'Server configuration error.' });
+  }
+
+  // --- LÓGICA DE CHAVES (TERRENO PREPARADO) ---
+  const userCustomApiKey = request.headers['x-custom-api-key'] as string | undefined;
+  const licenseKey = request.headers['x-license-key'] as string | undefined;
+
+  let targetApiKey = envOpenAiKey;
+  let usageType = 'free_tier';
+
+  if (userCustomApiKey) {
+    targetApiKey = userCustomApiKey;
+    usageType = 'custom_key';
+  
+  } else if (licenseKey) {
+    // 2. Usuário Pagante (Futuro)
+    // AQUI ENTRARÁ A VALIDAÇÃO DEPOIS:
+    // const isValid = await checkLicenseInDb(licenseKey);
+    // if (!isValid) return error...
+    
+    // Por enquanto, aceitamos a licença e logamos como plano pago
+    usageType = 'license_plan'; 
   }
 
   try {
@@ -69,61 +94,55 @@ export default async function handler(
     const originUrl = request.headers['referer'] || request.headers['origin'] || 'unknown';
     const clientIp = getClientIp(request);
 
-    // --- RATE LIMITING ---
+    // --- RATE LIMITING (3s por IP) ---
     try {
-      const db = await connectToDatabase(mongoUri);
-      
+      const db = await connectToDatabase(envMongoUri);
       const lastInteraction = await db.collection('interactions').findOne(
         { client_ip: clientIp },
         { sort: { timestamp: -1 }, projection: { timestamp: 1 } }
       );
 
       if (lastInteraction) {
-        const lastTime = new Date(lastInteraction.timestamp).getTime();
-        const now = Date.now();
-        const timeDiff = now - lastTime;
-
-        if (timeDiff < 3000) { // 3000ms = 3 segundos
-          console.warn(`Rate Limit Triggered for IP: ${clientIp}`);
+        const timeDiff = Date.now() - new Date(lastInteraction.timestamp).getTime();
+        if (timeDiff < 3000) { 
           return response.status(429).json({ 
-            error: "Calma! Você está enviando mensagens muito rápido. Aguarde alguns segundos." 
+            error: "Calma! Você está enviando mensagens muito rápido." 
           });
         }
       }
     } catch (limitError) {
-      console.error("Erro ao verificar rate limit:", limitError);
+      console.error("Erro no Rate Limit (ignorado):", limitError);
     }
 
+    // --- PROCESSAMENTO DA MENSAGEM ---
     const { messages, systemPrompt } = request.body as ChatRequestBody;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return response.status(400).json({ error: 'Chat history invalid' });
+      return response.status(400).json({ error: 'Histórico de chat inválido.' });
     }
 
     const lastMessage = messages[messages.length - 1];
-    const userContent = String(lastMessage.content || '');
-
-    if (lastMessage.role === 'user' && !isValidContent(userContent)) {
+    
+    // Validação de conteúdo do usuário
+    if (lastMessage.role === 'user' && !isValidContent(String(lastMessage.content || ''))) {
       return response.status(200).json({
-        content: "Desculpe, mas sua mensagem não é válida (detectamos spam ou caracteres aleatórios). Tente novamente."
+        content: "Sua mensagem parece inválida ou spam. Tente reformular."
       });
     }
 
-    const defaultSystemPrompt = "Você é um assistente virtual amigável e útil.";
-    const finalSystemPrompt = systemPrompt || defaultSystemPrompt;
+    const finalSystemPrompt = systemPrompt || "Você é um assistente virtual útil.";
 
-    const messagesForOpenAI: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-      { role: 'system', content: finalSystemPrompt },
-      ...messages
-    ];
-
-    const openai = new OpenAI({ apiKey });
+    const openai = new OpenAI({ apiKey: targetApiKey });
 
     const startTime = Date.now();
 
+    // Chamada à OpenAI
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
-      messages: messagesForOpenAI,
+      messages: [
+        { role: 'system', content: finalSystemPrompt },
+        ...messages
+      ],
       temperature: 0.7,
     });
 
@@ -131,42 +150,45 @@ export default async function handler(
     const reply = completion.choices[0].message.content;
     const usage = completion.usage;
 
+    // --- LOGGING COMPLETO NO MONGO ---
     try {
-      const db = await connectToDatabase(mongoUri);
-
+      const db = await connectToDatabase(envMongoUri);
       await db.collection('interactions').insertOne({
         timestamp: new Date(),
         model: 'gpt-3.5-turbo',
+        usage_type: usageType,
+        license_key: licenseKey || null,
         duration_ms: duration,
         prompt_tokens: usage?.prompt_tokens || 0,
         completion_tokens: usage?.completion_tokens || 0,
         total_tokens: usage?.total_tokens || 0,
-        client_user_agent: userAgent,
-        client_origin: originUrl,
         client_ip: clientIp,
+        client_origin: originUrl,
+        client_user_agent: userAgent,
         status: 'success',
       });
-
     } catch (dbError) {
-      console.error("Erro ao salvar log no Mongo:", dbError);
+      console.error("Erro ao salvar log:", dbError);
     }
 
     return response.status(200).json({ content: reply });
 
   } catch (error: any) {
-    console.error("Proxy error:", error);
+    console.error("Erro no Proxy:", error);
+    
+    // Log de erro no banco para debug
     try {
-      if (process.env.MONGODB_URI) {
-        const db = await connectToDatabase(process.env.MONGODB_URI);
-        await db.collection('interactions').insertOne({
-          timestamp: new Date(),
-          status: 'error',
-          error_message: error.message,
-          client_ip: getClientIp(request),
-        });
-      }
-    } catch (e) { }
+        if (envMongoUri) {
+            const db = await connectToDatabase(envMongoUri);
+            await db.collection('interactions').insertOne({
+                timestamp: new Date(),
+                status: 'error',
+                error_message: error.message || String(error),
+                client_ip: getClientIp(request),
+            });
+        }
+    } catch (_) {}
 
-    return response.status(500).json({ error: `Proxy error - ${error}` });
+    return response.status(500).json({ error: `Erro interno no Proxy: ${error.message}` });
   }
 }

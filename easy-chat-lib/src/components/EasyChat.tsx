@@ -28,6 +28,8 @@ interface EasyChatProps {
   config?: EasyChatConfig;
 }
 
+const OFFICIAL_PROXY_URL = 'https://easy-chat-brown.vercel.app/api';
+
 const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   const {
     position = 'bottom-right',
@@ -40,10 +42,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     apiKey,
     licenseKey,
     onHistoryChange,
-    api = {
-      useProxy: true,
-      proxyUrl: 'https://easy-chat-brown.vercel.app/api'
-    }
+    api,
   }: EasyChatConfig = config || {};
 
   const MAX_CHARS = 100;
@@ -107,8 +106,55 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     }, 300);
   };
 
+
+  const validateConfig = (): { isValid: boolean; error?: string; targetUrl?: string } => {
+    const hasPaidKeys = !!apiKey && !!licenseKey;
+    const hasCustomProxy = !!api?.proxyUrl;
+
+    if (hasPaidKeys && hasCustomProxy) {
+      return { 
+        isValid: false, 
+        error: language === 'pt' 
+          ? 'Erro de Configuração: Conflito detectado. Você forneceu chaves de licença E uma URL de proxy personalizada. Use apenas um dos métodos.' 
+          : 'Config Error: Conflict detected. You provided license keys AND a custom proxy URL. Please use only one method.'
+      };
+    }
+
+    if (!hasPaidKeys && !hasCustomProxy) {
+      if (apiKey && !licenseKey) return { isValid: true, targetUrl: undefined };
+
+      return { 
+        isValid: false, 
+        error: language === 'pt' 
+          ? 'Erro de Configuração: Nenhuma conexão válida. Forneça suas chaves de acesso (EasyChat PRO) OU configure seu proxy próprio.' 
+          : 'Config Error: No valid connection. Provide your access keys (EasyChat PRO) OR configure your custom proxy.'
+      };
+    }
+
+    if (hasPaidKeys) {
+      return { isValid: true, targetUrl: OFFICIAL_PROXY_URL };
+    }
+
+    if (hasCustomProxy) {
+      return { isValid: true, targetUrl: api!.proxyUrl };
+    }
+
+    return { isValid: false, error: 'Erro desconhecido.' };
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
+
+    const validation = validateConfig();
+
+    if (!validation.isValid) {
+      setMessages(prev => [...prev, { role: 'user', content: input }]);
+      setTimeout(() => {
+        setMessages(prev => [...prev, { role: 'system', content: `🚫 ${validation.error}` }]);
+      }, 200);
+      setInput('');
+      return;
+    }
 
     const userText = input;
     setInput('');
@@ -119,21 +165,22 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
     try {
       let botResponse = '';
+      const targetUrl = validation.targetUrl;
+      
+      // Se o alvo for OpenAI direto
+      // if (targetUrl === 'openai') {
+      //   throw new Error("Chamada direta à OpenAI desativada. Use Proxy.");
+      // } 
 
-      if (api.useProxy && api.proxyUrl) {
-
+      if (targetUrl) {
         const headers: Record<string, string> = {
           'Content-Type': 'application/json'
         };
 
-        if (apiKey) {
-          headers['x-custom-api-key'] = apiKey;
-        }
+        if (apiKey) headers['x-custom-api-key'] = apiKey;
+        if (licenseKey) headers['x-license-key'] = licenseKey;
 
-        if (licenseKey) {
-          headers['x-license-key'] = licenseKey;
-        }
-        const res = await fetch(api.proxyUrl, {
+        const res = await fetch(targetUrl, {
           method: 'POST',
           headers: headers,
           body: JSON.stringify({
