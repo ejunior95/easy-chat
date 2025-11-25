@@ -10,15 +10,15 @@ function App() {
       {/* Instanciando o chat */}
       <EasyChat
         config={{
-          position: 'bottom-right',
-          title: 'EasyChat',
-          primaryColor: '#007bff',
-          initialMessage: 'Olá, visitante! Como posso ser útil?',
-          systemPrompt: 'Você é um assistente útil.',
-          theme: 'system',
+          title: "EasyBot 🤖",
+          position: "bottom-left",
+          primaryColor: "#0067E2",
+          theme: "dark",
+          language: 'pt',
+          systemPrompt: 'Você é um assistente útil especializado em EasyChat.',
+          initialMessage: "Olá! Precisa de ajuda com a EasyChat?",
           api: {
-            useProxy: true,
-            proxyUrl: ''
+            proxyUrl: "https://easy-chat-brown.vercel.app/api",
           }
         }}
       />
