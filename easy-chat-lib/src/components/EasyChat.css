@@ -213,12 +213,28 @@
         bottom: 0;
 
         width: 100vw;
-        height: 100vh;
-        max-height: 100vh;
+        height: 100dvh;
+        max-height: 100dvh;
 
         margin: 0;
         border-radius: 0;
         z-index: 10000;
+    }
+
+    .ec-messages {
+        max-height: calc(100dvh - 120px);
+        overflow-y: auto;
+    }
+
+    .ec-footer {
+        position: sticky;
+        bottom: 0;
+        flex-shrink: 0;
+        background-color: var(--ec-bg-color);
+    }
+
+    .ec-header {
+        flex-shrink: 0;
     }
 
     /* Ajusta a animação no mobile para vir de baixo total */
