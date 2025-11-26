@@ -11,6 +11,22 @@ function App() {
       <EasyChat
         config={{
           title: "EasyBot 🤖",
+          position: "bottom-left",
+          primaryColor: "#289114ff",
+          theme: "dark",
+          language: 'pt',
+          systemPrompt: 'Você é um assistente útil especializado em EasyChat.',
+          initialMessage: "Olá! Precisa de ajuda com a EasyChat?",
+          // @ts-ignore
+          isPlayground: true,
+          api: {
+            proxyUrl: "https://easy-chat-rho.vercel.app/api",
+          }
+        }}
+      />
+      <EasyChat
+        config={{
+          title: "EasyBot 🤖",
           position: "bottom-right",
           primaryColor: "#0067E2",
           theme: "dark",

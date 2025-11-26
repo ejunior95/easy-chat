@@ -28,7 +28,7 @@ export interface EasyChatConfig {
 interface EasyChatProps {
   config?: EasyChatConfig;
 }
-// Constantes globais evitam recriação na renderização
+
 const OFFICIAL_PROXY_URL = 'https://easy-chat-rho.vercel.app/';
 const MAX_CHARS = 100;
 
@@ -48,6 +48,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     api,
   }: EasyChatConfig = config || {};
 
+  // Flag interna para desenvolvimento/site de marketing
   const _internalConfig = config as EasyChatConfig & { isPlayground?: boolean };
   const isPlayground = _internalConfig?.isPlayground ?? false;
 
@@ -65,9 +66,9 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
   // --- REFS ---
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatWindowRef = useRef<HTMLDivElement>(null); // Referência para a janela (Dialog)
+  const chatWindowRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const launcherRef = useRef<HTMLButtonElement>(null); // Referência para o botão flutuante
+  const launcherRef = useRef<HTMLButtonElement>(null);
 
   // ID único para o título (usado pelo aria-labelledby)
   const titleId = 'easy-chat-title';
@@ -75,7 +76,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   // --- EFEITOS (LÓGICA) ---
 
   // 1. Scroll Automático
-  // Rola para baixo sempre que mensagens mudam, chat abre ou teclado mobile aparece
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -96,7 +96,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     if (onHistoryChange) onHistoryChange(messages);
   }, [messages, onHistoryChange]);
 
-  // 4. Ajuste Mobile (Teclado)
+  // 4. Ajuste Mobile
   useEffect(() => {
     if (!isOpen) return;
     const handleResize = () => {
@@ -109,7 +109,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
         setViewportHeight(undefined);
       }
     };
-
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleResize);
       window.visualViewport.addEventListener('scroll', handleResize);
@@ -117,7 +116,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     } else {
       window.addEventListener('resize', handleResize);
     }
-
     return () => {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleResize);
@@ -128,17 +126,14 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     };
   }, [isOpen]);
 
-  // --- ACESSIBILIDADE & UX (NOVO) ---
-  
+  // --- ACESSIBILIDADE & UX ---
   // A. Gerenciamento de Foco e Tecla ESC
   useEffect(() => {
     // Ao abrir: focar no input
     if (isOpen) {
       // Pequeno delay para garantir que o DOM renderizou a animação
       setTimeout(() => inputRef.current?.focus(), 50);
-    } 
-    // Ao fechar (completo): tentar devolver foco ao botão launcher
-    else if (!isOpen && !isClosing) {
+    } else if (!isOpen && !isClosing) {
       // Nota: O launcher precisa estar renderizado para receber foco. 
       // Como ele reaparece quando !isOpen, usamos um setTimeout zero para aguardar o ciclo do React.
       setTimeout(() => launcherRef.current?.focus(), 0);
@@ -146,14 +141,10 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
-
       // Fechar com ESC
-      if (e.key === 'Escape') {
-        closeChat();
-      }
+      if (e.key === 'Escape') closeChat();
 
-      // "Focus Trap" Simples (Ciclo de Tab)
-      // Garante que o usuário não "saia" do chat via Tab enquanto ele estiver aberto
+      // Focus Trap
       if (e.key === 'Tab' && chatWindowRef.current) {
         const focusableElements = chatWindowRef.current.querySelectorAll(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -161,12 +152,12 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
         const firstElement = focusableElements[0] as HTMLElement;
         const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
 
-        if (e.shiftKey) { /* Shift + Tab */
+        if (e.shiftKey) { 
           if (document.activeElement === firstElement) {
             lastElement.focus();
             e.preventDefault();
           }
-        } else { /* Tab */
+        } else { 
           if (document.activeElement === lastElement) {
             firstElement.focus();
             e.preventDefault();
@@ -174,12 +165,11 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
         }
       }
     };
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isClosing]); // Dependência isClosing é importante para o foco de retorno
+  }, [isOpen, isClosing]);
 
-  // B. Fechar ao clicar fora (Mouse)
+  // B. Click Outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (isOpen && chatWindowRef.current && !chatWindowRef.current.contains(event.target as Node)) {
@@ -276,7 +266,29 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   };
 
   const handleSend = async () => {
-    if (isPlayground || !input.trim() || isLoading) return;
+    if (!input.trim() || isLoading) return;
+
+    // --- LÓGICA DO PLAYGROUND (Site de Divulgação) ---
+    // Se estiver no playground, ignoramos validações e API real.
+    if (isPlayground) {
+        const userText = input;
+        setInput('');
+        setIsLoading(true);
+        setMessages(prev => [...prev, { role: 'user', content: userText }]);
+
+        // Simula delay de rede para parecer real
+        setTimeout(() => {
+            setMessages(prev => [...prev, { 
+                role: 'assistant', 
+                content: language === 'pt' 
+                    ? "✨ **Modo Demonstração:** Olá! No site oficial do EasyChat, eu simulo uma resposta para você ver como sou bonito e rápido. Em sua aplicação real, aqui apareceria a resposta da Inteligência Artificial."
+                    : "✨ **Demo Mode:** Hello! On the EasyChat website, I simulate a response so you can see how fast and pretty I am. In your real app, the AI response would appear here."
+            }]);
+            setIsLoading(false);
+        }, 1500);
+        return; // Interrompe a execução para não validar nem chamar API
+    }
+    // --------------------------------------------------
 
     const validation = validateConfig();
 
@@ -327,12 +339,10 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
           className={`ec-window ${isClosing ? 'ec-closing' : ''}`} 
           ref={chatWindowRef}
           style={windowStyle}
-          // ACESSIBILIDADE: Define que é um diálogo modal
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
         >
-          {/* Cabeçalho */}
           <div className="ec-header">
             <span id={titleId}>{title}</span>
             <button
@@ -347,12 +357,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
           {/* Área de Mensagens */}
           {/* ACESSIBILIDADE: aria-live anuncia novas mensagens automaticamente */}
-          <div 
-            className="ec-messages" 
-            role="log" 
-            aria-live="polite" 
-            aria-atomic="false"
-          >
+          <div className="ec-messages" role="log" aria-live="polite" aria-atomic="false">
             {messages.map((msg, idx) => (
               msg.role !== 'system' && (
                 <div key={idx} className={`ec-message ec-message-${msg.role}`}>
@@ -391,22 +396,21 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
                 value={input}
                 maxLength={MAX_CHARS}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !isPlayground) handleSend(); }}
+                // Alteração aqui: Removemos o bloqueio de !isPlayground
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
                 disabled={isLoading}
                 aria-label={language === 'pt' ? 'Mensagem para o assistente' : 'Message to assistant'}
               />
               <button 
                 onClick={handleSend} 
-                disabled={isLoading || !input.trim() || isPlayground}
+                // Alteração aqui: Removemos o bloqueio de isPlayground
+                disabled={isLoading || !input.trim()}
                 aria-label={language === 'pt' ? 'Enviar mensagem' : 'Send message'}
               >
                 ➤
               </button>
             </div>
-            <div 
-              className={`ec-char-counter ${getCounterClass()}`} 
-              aria-hidden="true" // Ocultamos do leitor pois pode ser barulhento ler a cada tecla
-            >
+            <div className={`ec-char-counter ${getCounterClass()}`} aria-hidden="true">
               {input.length}/{MAX_CHARS} {language === 'pt' ? 'caracteres' : 'characters'}
             </div>
           </div>
