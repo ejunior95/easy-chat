@@ -55,6 +55,8 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const [viewportHeight, setViewportHeight] = useState<number | undefined>(undefined);
+
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: initialMessage }
   ]);
@@ -67,20 +69,63 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
 
-  // Scroll input para visibilidade quando o teclado virtual aparece
+// 1. Scroll automático para a última mensagem
   useEffect(() => {
-    const handleInputFocus = () => {
-      setTimeout(() => {
-        inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 100);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isOpen, viewportHeight]);
+
+  // Bloquear scroll da página de fundo (Body Scroll Lock)
+  useEffect(() => {
+    if (isOpen) {
+      // Salva o estilo original
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      // Bloqueia scroll
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        // Restaura scroll ao fechar
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [isOpen]);
+
+  // Ajuste de altura para Teclado Mobile (Visual Viewport API)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleResize = () => {
+      // Aplicando lógica especial se for mobile
+      if (window.innerWidth <= 480 && window.visualViewport) {
+        // Define a altura como a altura visível real (descontando o teclado)
+        setViewportHeight(window.visualViewport.height);
+        
+        // Garante que o input fique visível rolando para ele
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+        }, 100);
+      } else {
+        setViewportHeight(undefined);
+      }
     };
 
-    const inputElement = inputRef.current;
-    if (inputElement) {
-      inputElement.addEventListener('focus', handleInputFocus);
-      return () => inputElement.removeEventListener('focus', handleInputFocus);
+    // Ouve redimensionamento
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      window.visualViewport.addEventListener('scroll', handleResize);
+      handleResize();
+    } else {
+      window.addEventListener('resize', handleResize);
     }
-  }, []);
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+        window.visualViewport.removeEventListener('scroll', handleResize);
+      } else {
+        window.removeEventListener('resize', handleResize);
+      }
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (onHistoryChange) {
@@ -251,6 +296,12 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   };
 
   const customStyle = { '--ec-primary-color': primaryColor } as React.CSSProperties;
+
+  // Estilo dinâmico para corrigir altura no mobile quando teclado abre
+  const windowStyle: React.CSSProperties = viewportHeight 
+    ? { height: `${viewportHeight}px`, maxHeight: `${viewportHeight}px`, bottom: 0, borderRadius: 0 } 
+    : {};
+
   const themeClass = getThemeClass();
 
   return (
@@ -258,13 +309,17 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
       {/* Janela do chat */}
       {(isOpen || isClosing) && (
-        <div className={`ec-window ${isClosing ? 'ec-closing' : ''}`} ref={chatWindowRef}>
+        <div 
+          className={`ec-window ${isClosing ? 'ec-closing' : ''}`} 
+          ref={chatWindowRef}
+          style={windowStyle}
+        >
 
           <div className="ec-header">
             <span>{title}</span>
             <button
               onClick={closeChat}
-              style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '20px' }}
+              className="ec-close-btn"
               aria-label={language === 'pt' ? 'Fechar chat' : 'Close chat'}
             >
               x

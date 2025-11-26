@@ -207,18 +207,18 @@
 
     .ec-window {
         position: fixed;
-        top: 0;
         left: 0;
         right: 0;
         bottom: 0;
 
-        width: 100vw;
         height: 100dvh;
         max-height: 100dvh;
 
         margin: 0;
         border-radius: 0;
         z-index: 10000;
+        display: flex;
+        flex-direction: column;
     }
 
     .ec-messages {
@@ -367,6 +367,15 @@
 
 .ec-input-area button:disabled {
     color: #ccc;
+}
+
+.ec-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 20px;
+    padding: 0 10px;
 }
 
 /* --- Markdown Styles --- */
