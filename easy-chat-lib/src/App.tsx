@@ -11,7 +11,7 @@ function App() {
       <EasyChat
         config={{
           title: "EasyBot 🤖",
-          position: "bottom-left",
+          position: "bottom-right",
           primaryColor: "#0067E2",
           theme: "dark",
           language: 'pt',
