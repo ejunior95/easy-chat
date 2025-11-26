@@ -28,7 +28,7 @@ interface EasyChatProps {
   config?: EasyChatConfig;
 }
 
-const OFFICIAL_PROXY_URL = 'https://easy-chat-brown.vercel.app/api';
+const OFFICIAL_PROXY_URL = 'https://easy-chat-rho.vercel.app/';
 
 const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   const {
@@ -61,10 +61,26 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
+
+  // Scroll input para visibilidade quando o teclado virtual aparece
+  useEffect(() => {
+    const handleInputFocus = () => {
+      setTimeout(() => {
+        inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    };
+
+    const inputElement = inputRef.current;
+    if (inputElement) {
+      inputElement.addEventListener('focus', handleInputFocus);
+      return () => inputElement.removeEventListener('focus', handleInputFocus);
+    }
+  }, []);
 
   useEffect(() => {
     if (onHistoryChange) {
@@ -284,6 +300,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
           <div className="ec-footer">
             <div className="ec-input-wrapper">
               <input
+                ref={inputRef}
                 type="text"
                 placeholder={language === 'pt' ? 'Digite aqui sua pergunta...' : 'Type your question here...'}
                 value={input}

@@ -18,7 +18,7 @@ function App() {
           systemPrompt: 'Você é um assistente útil especializado em EasyChat.',
           initialMessage: "Olá! Precisa de ajuda com a EasyChat?",
           api: {
-            proxyUrl: "https://easy-chat-brown.vercel.app/api",
+            proxyUrl: "https://easy-chat-rho.vercel.app/api",
           }
         }}
       />

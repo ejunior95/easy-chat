@@ -222,15 +222,36 @@
     }
 
     .ec-messages {
-        max-height: calc(100dvh - 120px);
+        flex: 1;
+        padding: 15px;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .ec-footer {
-        position: sticky;
-        bottom: 0;
+        position: relative;
         flex-shrink: 0;
         background-color: var(--ec-bg-color);
+        border-top: 1px solid var(--ec-border-color);
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .ec-footer input {
+        padding: 12px;
+        border-radius: 24px;
+        outline: none;
+        font-size: 16px;
+        background-color: var(--ec-input-bg);
+        color: var(--ec-text-color);
+        border: 1px solid var(--ec-border-color);
+    }
+
+    .ec-footer input:focus {
+        border-color: var(--ec-primary-color);
+        scroll-padding-bottom: 100px;
     }
 
     .ec-header {
