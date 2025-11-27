@@ -10,7 +10,7 @@ function App() {
       {/* Instanciando o chat */}
       <EasyChat
         config={{
-          title: "EasyBot 🤖",
+          title: "Playground EasyBot 🤖",
           position: "bottom-left",
           primaryColor: "#289114ff",
           theme: "dark",
