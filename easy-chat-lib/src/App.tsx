@@ -12,8 +12,8 @@ function App() {
         config={{
           title: "Playground EasyBot 🤖",
           position: "bottom-left",
-          primaryColor: "#289114ff",
-          theme: "dark",
+          primaryColor: "#ff0000ff",
+          theme: "light",
           language: 'pt',
           systemPrompt: 'Você é um assistente útil especializado em EasyChat.',
           initialMessage: "Olá! Precisa de ajuda com a EasyChat?",

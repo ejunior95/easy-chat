@@ -32,6 +32,24 @@ interface EasyChatProps {
 const OFFICIAL_PROXY_URL = 'https://easy-chat-rho.vercel.app/';
 const MAX_CHARS = 100;
 
+// --- FUNÇÃO AUXILIAR DE CONTRASTE (NOVO) ---
+// Calcula se o texto deve ser preto ou branco baseado na cor de fundo (YIQ)
+const getContrastingTextColor = (hexColor: string): string => {
+  // Remove o # se existir
+  const hex = hexColor.replace('#', '');
+  
+  // Converte para RGB
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  // Calcula a luminância (fórmula YIQ padrão)
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  
+  // Se for claro (>= 128), retorna preto. Senão, branco.
+  return yiq >= 128 ? '#000000' : '#ffffff';
+};
+
 const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   // --- CONFIGURAÇÃO ---
   const {
@@ -48,7 +66,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     api,
   }: EasyChatConfig = config || {};
 
-  // Flag interna para desenvolvimento/site de marketing
   const _internalConfig = config as EasyChatConfig & { isPlayground?: boolean };
   const isPlayground = _internalConfig?.isPlayground ?? false;
 
@@ -57,7 +74,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  // Estado para controlar altura no mobile (teclado virtual)
   const [viewportHeight, setViewportHeight] = useState<number | undefined>(undefined);
 
   const [messages, setMessages] = useState<Message[]>([
@@ -70,19 +86,16 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
 
-  // ID único para o título (usado pelo aria-labelledby)
   const titleId = 'easy-chat-title';
 
   // --- EFEITOS (LÓGICA) ---
 
-  // 1. Scroll Automático
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isOpen, viewportHeight]);
 
-  // 2. Bloqueio de Scroll do Body
   useEffect(() => {
     if (isOpen) {
       const originalStyle = window.getComputedStyle(document.body).overflow;
@@ -91,12 +104,10 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     }
   }, [isOpen]);
 
-  // 3. Callback de Histórico
   useEffect(() => {
     if (onHistoryChange) onHistoryChange(messages);
   }, [messages, onHistoryChange]);
 
-  // 4. Ajuste Mobile
   useEffect(() => {
     if (!isOpen) return;
     const handleResize = () => {
@@ -127,24 +138,17 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   }, [isOpen]);
 
   // --- ACESSIBILIDADE & UX ---
-  // A. Gerenciamento de Foco e Tecla ESC
   useEffect(() => {
-    // Ao abrir: focar no input
     if (isOpen) {
-      // Pequeno delay para garantir que o DOM renderizou a animação
       setTimeout(() => inputRef.current?.focus(), 50);
     } else if (!isOpen && !isClosing) {
-      // Nota: O launcher precisa estar renderizado para receber foco. 
-      // Como ele reaparece quando !isOpen, usamos um setTimeout zero para aguardar o ciclo do React.
       setTimeout(() => launcherRef.current?.focus(), 0);
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
-      // Fechar com ESC
       if (e.key === 'Escape') closeChat();
 
-      // Focus Trap
       if (e.key === 'Tab' && chatWindowRef.current) {
         const focusableElements = chatWindowRef.current.querySelectorAll(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -169,7 +173,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isClosing]);
 
-  // B. Click Outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (isOpen && chatWindowRef.current && !chatWindowRef.current.contains(event.target as Node)) {
@@ -268,15 +271,13 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-    // --- LÓGICA DO PLAYGROUND (Site de Divulgação) ---
-    // Se estiver no playground, ignoramos validações e API real.
+    // --- PLAYGROUND LOGIC ---
     if (isPlayground) {
         const userText = input;
         setInput('');
         setIsLoading(true);
         setMessages(prev => [...prev, { role: 'user', content: userText }]);
 
-        // Simula delay de rede para parecer real
         setTimeout(() => {
             setMessages(prev => [...prev, { 
                 role: 'assistant', 
@@ -286,9 +287,8 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
             }]);
             setIsLoading(false);
         }, 1500);
-        return; // Interrompe a execução para não validar nem chamar API
+        return; 
     }
-    // --------------------------------------------------
 
     const validation = validateConfig();
 
@@ -324,7 +324,15 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     return '';
   };
 
-  const customStyle = { '--ec-primary-color': primaryColor } as React.CSSProperties;
+  // --- ESTILOS DINÂMICOS ---
+  // Calculamos a cor do texto (preto ou branco) baseada na cor primária
+  const contrastingTextColor = getContrastingTextColor(primaryColor);
+
+  const customStyle = { 
+    '--ec-primary-color': primaryColor,
+    '--ec-primary-text-color': contrastingTextColor, // Nova variável CSS
+  } as React.CSSProperties;
+
   const windowStyle: React.CSSProperties = viewportHeight 
     ? { height: `${viewportHeight}px`, maxHeight: `${viewportHeight}px`, bottom: 0, borderRadius: 0 } 
     : {};
@@ -351,12 +359,14 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
               aria-label={language === 'pt' ? 'Fechar chat' : 'Close chat'}
               title={language === 'pt' ? 'Fechar' : 'Close'}
             >
-              x
+              {/* Ícone SVG de Fechar mais bonito */}
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
             </button>
           </div>
 
-          {/* Área de Mensagens */}
-          {/* ACESSIBILIDADE: aria-live anuncia novas mensagens automaticamente */}
           <div className="ec-messages" role="log" aria-live="polite" aria-atomic="false">
             {messages.map((msg, idx) => (
               msg.role !== 'system' && (
@@ -386,7 +396,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Rodapé */}
           <div className="ec-footer">
             <div className="ec-input-wrapper">
               <input
@@ -396,18 +405,17 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
                 value={input}
                 maxLength={MAX_CHARS}
                 onChange={(e) => setInput(e.target.value)}
-                // Alteração aqui: Removemos o bloqueio de !isPlayground
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
                 disabled={isLoading}
                 aria-label={language === 'pt' ? 'Mensagem para o assistente' : 'Message to assistant'}
               />
               <button 
+                className="ec-send-btn"
                 onClick={handleSend} 
-                // Alteração aqui: Removemos o bloqueio de isPlayground
                 disabled={isLoading || !input.trim()}
                 aria-label={language === 'pt' ? 'Enviar mensagem' : 'Send message'}
               >
-                ➤
+                 ➤
               </button>
             </div>
             <div className={`ec-char-counter ${getCounterClass()}`} aria-hidden="true">
@@ -417,7 +425,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
         </div>
       )}
 
-      {/* Botão Flutuante */}
       {!isOpen && !isClosing && (
         <button 
           ref={launcherRef}
