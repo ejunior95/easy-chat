@@ -17,7 +17,7 @@
     --ec-secondary-bg: #2d2d2d;
     --ec-input-bg: #2d2d2d;
     --ec-border-color: #444444;
-  }
+}
 
 /* Container principal */
 .ec-container {
@@ -50,16 +50,17 @@
     top: 20px;
     right: 20px;
     align-items: flex-end;
-    flex-direction: column-reverse;
+    flex-direction: column-reverse; /* Inverte ordem botão/janela */
 }
 
 .ec-top-left {
     top: 20px;
     left: 20px;
     align-items: flex-start;
-    flex-direction: column-reverse;
+    flex-direction: column-reverse; /* Inverte ordem botão/janela */
 }
 
+/* ... (Estilos internos: footer, input, messages permanecem iguais) ... */
 .ec-footer {
     background-color: var(--ec-bg-color);
     border-top: 1px solid var(--ec-border-color);
@@ -67,15 +68,15 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
-  }
+}
   
-  .ec-input-wrapper {
+.ec-input-wrapper {
     display: flex;
     gap: 8px;
     width: 100%;
-  }
+}
   
-  .ec-footer input {
+.ec-footer input {
     flex: 1;
     padding: 12px;
     border-radius: 24px;
@@ -84,37 +85,37 @@
     background-color: var(--ec-input-bg);
     color: var(--ec-text-color);
     border: 1px solid var(--ec-border-color);
-  }
+}
   
-  .ec-footer input:focus { border-color: var(--ec-primary-color); }
+.ec-footer input:focus { border-color: var(--ec-primary-color); }
   
-  .ec-footer button {
+.ec-footer button {
     background-color: transparent;
     border: none;
     color: var(--ec-primary-color);
     font-weight: bold;
     cursor: pointer;
     padding: 0 10px;
-  }
+}
   
-  .ec-footer button:disabled { color: #ccc; }
+.ec-footer button:disabled { color: #ccc; }
 
-  .ec-char-counter {
+.ec-char-counter {
     font-size: 11px;
     color: #999;
     text-align: left;
     margin-left: 5px;
-  }
+}
   
-  .ec-char-counter.ec-limit-near {
-    color: #d6be0c; /* Amarelo */
+.ec-char-counter.ec-limit-near {
+    color: #d6be0c;
     font-weight: bold;
-  }
+}
   
-  .ec-char-counter.ec-limit-reached {
-    color: #ff1900; /* Vermelho */
+.ec-char-counter.ec-limit-reached {
+    color: #ff1900;
     font-weight: bolder;
-  }
+}
 
 /* Botão Flutuante */
 .ec-launcher {
@@ -130,6 +131,8 @@
     justify-content: center;
     transition: transform 0.2s, background-color 0.2s;
     margin-top: 15px;
+    /* No topo, queremos margem embaixo */
+    margin-bottom: 15px; 
     animation: ec-scaleIn 0.3s ease-out;
 }
 
@@ -142,7 +145,7 @@
     color: white;
 }
 
-/* Janela do Chat */
+/* Janela do Chat - Base */
 .ec-window {
     width: var(--ec-chat-width);
     height: var(--ec-chat-height);
@@ -152,54 +155,83 @@
     flex-direction: column;
     overflow: hidden;
     margin-bottom: 15px;
-
-    /* Animação de Entrada Padrão */
-    animation: ec-slideUpFadeIn var(--ec-anim-duration) ease-out forwards;
-    transform-origin: bottom right;
+    /* 🔥 REMOVIDO: animation e transform-origin fixos daqui. 
+       Agora são definidos nas media queries ou classes especificas abaixo */
+    
     background-color: var(--ec-bg-color);
     color: var(--ec-text-color);
     border: 1px solid var(--ec-border-color);
 }
 
-/* Classe aplicada via JS quando estiver fechando */
-.ec-window.ec-closing {
-    animation: ec-slideDownFadeOut var(--ec-anim-duration) ease-in forwards;
+/* --- 🔥 ANIMAÇÕES DINÂMICAS (DESKTOP) --- */
+@media (min-width: 481px) {
+    
+    /* 1. Bottom Right (Padrão: Cresce do canto inferior direito) */
+    .ec-bottom-right .ec-window {
+        transform-origin: bottom right;
+        animation: ec-slideUpFadeIn var(--ec-anim-duration) ease-out forwards;
+    }
+    .ec-bottom-right .ec-window.ec-closing {
+        animation: ec-slideDownFadeOut var(--ec-anim-duration) ease-in forwards;
+    }
+
+    /* 2. Bottom Left (Cresce do canto inferior esquerdo) */
+    .ec-bottom-left .ec-window {
+        transform-origin: bottom left;
+        animation: ec-slideUpFadeIn var(--ec-anim-duration) ease-out forwards;
+    }
+    .ec-bottom-left .ec-window.ec-closing {
+        animation: ec-slideDownFadeOut var(--ec-anim-duration) ease-in forwards;
+    }
+
+    /* 3. Top Right (Desce do canto superior direito) */
+    .ec-top-right .ec-window {
+        margin-bottom: 0; margin-top: 15px; /* Ajuste de margem para o topo */
+        transform-origin: top right;
+        animation: ec-slideDownFadeIn var(--ec-anim-duration) ease-out forwards;
+    }
+    .ec-top-right .ec-window.ec-closing {
+        animation: ec-slideUpFadeOut var(--ec-anim-duration) ease-in forwards;
+    }
+
+    /* 4. Top Left (Desce do canto superior esquerdo) */
+    .ec-top-left .ec-window {
+        margin-bottom: 0; margin-top: 15px; /* Ajuste de margem para o topo */
+        transform-origin: top left;
+        animation: ec-slideDownFadeIn var(--ec-anim-duration) ease-out forwards;
+    }
+    .ec-top-left .ec-window.ec-closing {
+        animation: ec-slideUpFadeOut var(--ec-anim-duration) ease-in forwards;
+    }
 }
 
-/* --- Animações (Keyframes) --- */
+/* --- Keyframes Globais --- */
 
+/* Animação para posições BOTTOM (Sobe aparecendo) */
 @keyframes ec-slideUpFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes ec-slideDownFadeOut {
-    from {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(20px) scale(0.95); }
+}
 
-    to {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-    }
+/* 🔥 NOVAS: Animação para posições TOP (Desce aparecendo) */
+@keyframes ec-slideDownFadeIn {
+    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ec-slideUpFadeOut {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(-20px) scale(0.95); }
 }
 
 @keyframes ec-scaleIn {
-    from {
-        transform: scale(0);
-    }
-
-    to {
-        transform: scale(1);
-    }
+    from { transform: scale(0); }
+    to { transform: scale(1); }
 }
 
 /* --- Responsividade (Mobile) --- */
@@ -207,19 +239,23 @@
 
     .ec-window {
         position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-
+        left: 0; right: 0; bottom: 0;
         height: 100dvh;
         max-height: 100dvh;
         width: 100%;
-
         margin: 0;
         border-radius: 0;
         z-index: 10000;
         display: flex;
         flex-direction: column;
+        
+        /* Mobile sempre anima de baixo para cima, independente da posição configurada */
+        animation: ec-mobileSlideUp var(--ec-anim-duration) ease-out forwards;
+    }
+
+    /* Sobrescreve animação de fechar no mobile */
+    .ec-window.ec-closing {
+        animation: ec-mobileSlideDown var(--ec-anim-duration) ease-in forwards;
     }
 
     .ec-messages {
@@ -259,32 +295,19 @@
         flex-shrink: 0;
     }
 
-    /* Ajusta a animação no mobile para vir de baixo total */
-    @keyframes ec-slideUpFadeIn {
-        from {
-            transform: translateY(100%);
-            opacity: 0;
-        }
-
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
+    /* Keyframes Exclusivos Mobile (Garante tela cheia vindo do fundo) */
+    @keyframes ec-mobileSlideUp {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
     }
 
-    @keyframes ec-slideDownFadeOut {
-        from {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        to {
-            transform: translateY(100%);
-            opacity: 0;
-        }
+    @keyframes ec-mobileSlideDown {
+        from { transform: translateY(0); opacity: 1; }
+        to { transform: translateY(100%); opacity: 0; }
     }
 }
 
+/* ... (Restante do CSS: Header, Messages, Markdown, Acessibilidade permanecem iguais) ... */
 .ec-header {
     background-color: var(--ec-primary-color);
     color: white;
@@ -336,40 +359,6 @@
     text-align: center;
 }
 
-.ec-input-area {
-    padding: 10px;
-    border-top: 1px solid #eee;
-    display: flex;
-    gap: 8px;
-    background-color: white;
-}
-
-.ec-input-area input {
-    flex: 1;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 24px;
-    outline: none;
-    font-size: 14px;
-}
-
-.ec-input-area input:focus {
-    border-color: var(--ec-primary-color);
-}
-
-.ec-input-area button {
-    background-color: transparent;
-    border: none;
-    color: var(--ec-primary-color);
-    font-weight: bold;
-    cursor: pointer;
-    padding: 0 10px;
-}
-
-.ec-input-area button:disabled {
-    color: #ccc;
-}
-
 .ec-close-btn {
     background: none;
     border: none;
@@ -408,7 +397,6 @@
     box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Remove outline padrão feio se não estiver usando teclado */
 .ec-footer button:focus:not(:focus-visible),
 .ec-header button:focus:not(:focus-visible),
 .ec-launcher:focus:not(:focus-visible) {
