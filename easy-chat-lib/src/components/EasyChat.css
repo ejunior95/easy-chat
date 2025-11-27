@@ -1,39 +1,82 @@
 :root {
-    --ec-primary-color: #007bff;
-    /* Variável para texto dinâmico (preto ou branco) definida pelo JS */
-    --ec-primary-text-color: #ffffff; 
-    
-    --ec-bg-color: #ffffff;
-    --ec-text-color: #333333;
-    --ec-secondary-bg: #e9e9e9;
-    --ec-input-bg: #ffffff;
-    --ec-border-color: #e1e1e1;
-    
-    --ec-chat-width: 350px;
-    --ec-chat-height: 500px;
-    --ec-anim-duration: 0.3s;
+  --ec-primary-color: #007bff;
+  /* Variável para texto dinâmico (preto ou branco) definida pelo JS */
+  --ec-primary-text-color: #ffffff; 
+  
+  --ec-bg-color: #ffffff;
+  --ec-text-color: #333333;
+  --ec-secondary-bg: #e9e9e9;
+  --ec-input-bg: #ffffff;
+  --ec-border-color: #e1e1e1;
+  
+  --ec-chat-width: 350px;
+  --ec-chat-height: 500px;
+  --ec-anim-duration: 0.3s;
+
+  /* Variáveis do Scrollbar Moderno */
+  --ec-scroll-thumb: rgba(0, 0, 0, 0.2);
+  --ec-scroll-thumb-hover: rgba(0, 0, 0, 0.35);
+  --ec-scroll-track: transparent;
 }
 
 .ec-theme-dark {
-    --ec-bg-color: #1e1e1e;
-    --ec-text-color: #f0f0f0;
-    --ec-secondary-bg: #434343;
-    --ec-input-bg: #2d2d2d;
-    --ec-border-color: #444444;
+  --ec-bg-color: #1e1e1e;
+  --ec-text-color: #f0f0f0;
+  --ec-secondary-bg: #434343;
+  --ec-input-bg: #2d2d2d;
+  --ec-border-color: #444444;
+
+  /* Ajuste do Scrollbar para Dark Mode */
+  --ec-scroll-thumb: rgba(255, 255, 255, 0.2);
+  --ec-scroll-thumb-hover: rgba(255, 255, 255, 0.35);
+}
+
+/* --- MODERN SCROLLBAR (Chrome, Edge, Safari) --- */
+.ec-messages::-webkit-scrollbar,
+.ec-markdown pre::-webkit-scrollbar {
+  width: 6px;               /* Largura fina e elegante */
+  height: 6px;              /* Altura para scroll horizontal */
+}
+
+.ec-messages::-webkit-scrollbar-track,
+.ec-markdown pre::-webkit-scrollbar-track {
+  background: var(--ec-scroll-track);
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.ec-messages::-webkit-scrollbar-thumb,
+.ec-markdown pre::-webkit-scrollbar-thumb {
+  background-color: var(--ec-scroll-thumb);
+  border-radius: 10px;      /* Bordas totalmente arredondadas */
+  border: 1px solid transparent; /* Espaço sutil */
+  background-clip: content-box;
+}
+
+.ec-messages::-webkit-scrollbar-thumb:hover,
+.ec-markdown pre::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ec-scroll-thumb-hover);
+}
+
+/* --- MODERN SCROLLBAR (Firefox) --- */
+.ec-messages,
+.ec-markdown pre {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ec-scroll-thumb) var(--ec-scroll-track);
 }
 
 /* Container principal */
 .ec-container {
-    position: fixed;
-    z-index: 2147483647;
-    display: flex;
-    flex-direction: column;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    pointer-events: none;
+  position: fixed;
+  z-index: 2147483647;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  pointer-events: none;
 }
 .ec-window,
 .ec-launcher {
-    pointer-events: auto;
+  pointer-events: auto;
 }
 
 /* Posições */
@@ -44,174 +87,164 @@
 
 /* HEADER CUSTOMIZADO */
 .ec-header {
-    background-color: var(--ec-primary-color);
-    /* Usa a cor de contraste calculada para o texto do título e ícone */
-    color: var(--ec-primary-text-color);
-    padding: 12px 16px;
-    font-weight: 600;
-    font-size: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
+  background-color: var(--ec-primary-color);
+  color: var(--ec-primary-text-color);
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
 }
 
 /* Botão de Fechar Personalizado */
 .ec-close-btn {
-    background: transparent;
-    border: none;
-    color: var(--ec-primary-text-color);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px;
-    border-radius: 50%;
-    transition: background-color 0.2s;
+  background: transparent;
+  border: none;
+  color: var(--ec-primary-text-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
 }
 
 .ec-close-btn:hover {
-    /* Fundo branco semitransparente para dar destaque */
-    background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 .ec-close-btn svg {
-    width: 20px;
-    height: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 /* MENSAGENS */
 .ec-messages {
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background-color: var(--ec-bg-color);
+  flex: 1;
+  padding: 15px;
+  padding-right: 10px; /* Ajuste para compensar o scrollbar novo */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: var(--ec-bg-color);
 }
 
 .ec-message {
-    max-width: 80%;
-    padding: 10px 14px;
-    border-radius: 12px;
-    font-size: 14px;
-    line-height: 1.4;
-    word-wrap: break-word;
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
 }
 
 .ec-message-user {
-    align-self: flex-end;
-    background-color: var(--ec-secondary-bg);
-    color: var(--ec-text-color);
-    border-bottom-right-radius: 2px;
+  align-self: flex-end;
+  background-color: var(--ec-secondary-bg);
+  color: var(--ec-text-color);
+  border-bottom-right-radius: 2px;
 }
 
 .ec-message-assistant {
-    align-self: flex-start;
-        background-color: var(--ec-primary-color);
-    color: var(--ec-primary-text-color);
-    border-bottom-left-radius: 2px;
+  align-self: flex-start;
+  background-color: var(--ec-primary-color);
+  color: var(--ec-primary-text-color);
+  border-bottom-left-radius: 2px;
 }
 
 .ec-message-error {
-    align-self: center;
-    color: #c62828;
-    font-size: 12px;
-    text-align: center;
+  align-self: center;
+  color: #c62828;
+  font-size: 12px;
+  text-align: center;
 }
 
 /* FOOTER & INPUT */
 .ec-footer {
-    background-color: var(--ec-bg-color);
-    border-top: 1px solid var(--ec-border-color);
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    border-bottom-left-radius: 16px;
-    border-bottom-right-radius: 16px;
+  background-color: var(--ec-bg-color);
+  border-top: 1px solid var(--ec-border-color);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
 }
   
 .ec-input-wrapper {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-    align-items: center;
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  align-items: center;
 }
   
 .ec-footer input {
-    flex: 1;
-    padding: 12px 16px;
-    border-radius: 24px;
-    outline: none;
-    font-size: 14px;
-    background-color: var(--ec-input-bg);
-    color: var(--ec-text-color);
-    border: 1px solid var(--ec-border-color);
-    transition: border-color 0.2s;
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 12px;
+  outline: none;
+  font-size: 14px;
+  background-color: var(--ec-input-bg);
+  color: var(--ec-text-color);
+  border: 1px solid var(--ec-border-color);
+  transition: border-color 0.2s;
 }
   
 .ec-footer input:focus { 
-    border-color: var(--ec-primary-color); 
+  border-color: var(--ec-primary-color); 
 }
 
 /* Botão de Enviar Personalizado */
 .ec-send-btn {
-    background-color: var(--ec-primary-color);
-    border: none;
-    color: var(--ec-primary-text-color);
-    
-    /* Tamanho fixo */
-    width: 44px;
-    height: 44px;
-    
-    /* Tamanho da fonte do ícone */
-    font-size: 18px; 
-    
-    /* Quadrado com cantos arredondados */
-    border-radius: 12px; 
-    
-    /* Centralização */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    /* Remove padding padrão do navegador */
-    padding: 0;
-
-    padding-left: 2px; 
-    padding-top: 1px; 
-    line-height: 1;
-
-    cursor: pointer;
-    transition: transform 0.2s, opacity 0.2s, background-color 0.2s;
-    flex-shrink: 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background-color: var(--ec-primary-color);
+  border: none;
+  color: var(--ec-primary-text-color);
+  width: 44px;
+  height: 44px;
+  font-size: 18px; 
+  border-radius: 12px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  padding-left: 2px; 
+  padding-top: 1px; 
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s, background-color 0.2s;
+  flex-shrink: 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .ec-send-btn:hover:not(:disabled) {
-    transform: scale(1.05);
-    filter: brightness(1.1); /* Clareia levemente ao passar o mouse */
+  transform: scale(1.05);
+  filter: brightness(1.1);
 }
 
 .ec-send-btn:active:not(:disabled) {
-    transform: scale(0.95);
+  transform: scale(0.95);
 }
   
 .ec-send-btn:disabled { 
-    background-color: #e0e0e0; 
-    color: #a0a0a0;
-    cursor: not-allowed; 
-    box-shadow: none;
+  background-color: #e0e0e0; 
+  color: #a0a0a0;
+  cursor: not-allowed; 
+  box-shadow: none;
 }
 
 .ec-char-counter {
-    font-size: 11px;
-    color: #999;
-    text-align: left;
-    margin-left: 10px;
+  font-size: 11px;
+  color: #999;
+  padding: 10px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
   
 .ec-char-counter.ec-limit-near { color: #d6be0c; font-weight: bold; }
@@ -219,60 +252,59 @@
 
 /* Botão Flutuante (Launcher) */
 .ec-launcher {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: var(--ec-primary-color);
-    /* Ícone do launcher usa contraste dinâmico */
-    color: var(--ec-primary-text-color);
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s, background-color 0.2s;
-    margin-top: 15px;
-    margin-bottom: 15px; 
-    animation: ec-scaleIn 0.3s ease-out;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--ec-primary-color);
+  color: var(--ec-primary-text-color);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background-color 0.2s;
+  margin-top: 15px;
+  margin-bottom: 15px; 
+  animation: ec-scaleIn 0.3s ease-out;
 }
 
 .ec-launcher:hover {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 .ec-launcher span {
-    font-size: 30px;
+  font-size: 30px;
 }
 
 /* Janela do Chat - Base */
 .ec-window {
-    width: var(--ec-chat-width);
-    height: var(--ec-chat-height);
-    border-radius: 16px;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    margin-bottom: 15px;
-    background-color: var(--ec-bg-color);
-    color: var(--ec-text-color);
-    border: 1px solid var(--ec-border-color);
+  width: var(--ec-chat-width);
+  height: var(--ec-chat-height);
+  border-radius: 16px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-bottom: 15px;
+  background-color: var(--ec-bg-color);
+  color: var(--ec-text-color);
+  border: 1px solid var(--ec-border-color);
 }
 
 /* --- ANIMAÇÕES DINÂMICAS (DESKTOP) --- */
 @media (min-width: 481px) {
-    .ec-bottom-right .ec-window { transform-origin: bottom right; animation: ec-slideUpFadeIn var(--ec-anim-duration) ease-out forwards; }
-    .ec-bottom-right .ec-window.ec-closing { animation: ec-slideDownFadeOut var(--ec-anim-duration) ease-in forwards; }
+  .ec-bottom-right .ec-window { transform-origin: bottom right; animation: ec-slideUpFadeIn var(--ec-anim-duration) ease-out forwards; }
+  .ec-bottom-right .ec-window.ec-closing { animation: ec-slideDownFadeOut var(--ec-anim-duration) ease-in forwards; }
 
-    .ec-bottom-left .ec-window { transform-origin: bottom left; animation: ec-slideUpFadeIn var(--ec-anim-duration) ease-out forwards; }
-    .ec-bottom-left .ec-window.ec-closing { animation: ec-slideDownFadeOut var(--ec-anim-duration) ease-in forwards; }
+  .ec-bottom-left .ec-window { transform-origin: bottom left; animation: ec-slideUpFadeIn var(--ec-anim-duration) ease-out forwards; }
+  .ec-bottom-left .ec-window.ec-closing { animation: ec-slideDownFadeOut var(--ec-anim-duration) ease-in forwards; }
 
-    .ec-top-right .ec-window { margin-bottom: 0; margin-top: 15px; transform-origin: top right; animation: ec-slideDownFadeIn var(--ec-anim-duration) ease-out forwards; }
-    .ec-top-right .ec-window.ec-closing { animation: ec-slideUpFadeOut var(--ec-anim-duration) ease-in forwards; }
+  .ec-top-right .ec-window { margin-bottom: 0; margin-top: 15px; transform-origin: top right; animation: ec-slideDownFadeIn var(--ec-anim-duration) ease-out forwards; }
+  .ec-top-right .ec-window.ec-closing { animation: ec-slideUpFadeOut var(--ec-anim-duration) ease-in forwards; }
 
-    .ec-top-left .ec-window { margin-bottom: 0; margin-top: 15px; transform-origin: top left; animation: ec-slideDownFadeIn var(--ec-anim-duration) ease-out forwards; }
-    .ec-top-left .ec-window.ec-closing { animation: ec-slideUpFadeOut var(--ec-anim-duration) ease-in forwards; }
+  .ec-top-left .ec-window { margin-bottom: 0; margin-top: 15px; transform-origin: top left; animation: ec-slideDownFadeIn var(--ec-anim-duration) ease-out forwards; }
+  .ec-top-left .ec-window.ec-closing { animation: ec-slideUpFadeOut var(--ec-anim-duration) ease-in forwards; }
 }
 
 /* --- Keyframes --- */
@@ -284,21 +316,21 @@
 
 /* --- Responsividade (Mobile) --- */
 @media (max-width: 480px) {
-    .ec-window {
-        position: fixed; left: 0; right: 0; bottom: 0;
-        height: 100dvh; max-height: 100dvh; width: 100%;
-        margin: 0; border-radius: 0; z-index: 10000;
-        display: flex; flex-direction: column;
-        animation: ec-mobileSlideUp var(--ec-anim-duration) ease-out forwards;
-    }
-    .ec-window.ec-closing { animation: ec-mobileSlideDown var(--ec-anim-duration) ease-in forwards; }
-    .ec-messages { flex: 1; padding: 15px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-    .ec-footer { position: relative; flex-shrink: 0; background-color: var(--ec-bg-color); border-top: 1px solid var(--ec-border-color); padding: 10px; display: flex; flex-direction: column; gap: 5px; border-radius: 0; }
-    .ec-footer input { padding: 12px; border-radius: 24px; outline: none; font-size: 16px; background-color: var(--ec-input-bg); color: var(--ec-text-color); border: 1px solid var(--ec-border-color); }
-    .ec-footer input:focus { border-color: var(--ec-primary-color); scroll-padding-bottom: 100px; }
-    .ec-header { flex-shrink: 0; border-radius: 0; }
-    @keyframes ec-mobileSlideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes ec-mobileSlideDown { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
+  .ec-window {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    height: 100dvh; max-height: 100dvh; width: 100%;
+    margin: 0; border-radius: 0; z-index: 10000;
+    display: flex; flex-direction: column;
+    animation: ec-mobileSlideUp var(--ec-anim-duration) ease-out forwards;
+  }
+  .ec-window.ec-closing { animation: ec-mobileSlideDown var(--ec-anim-duration) ease-in forwards; }
+  .ec-messages { flex: 1; padding: 15px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .ec-footer { position: relative; flex-shrink: 0; background-color: var(--ec-bg-color); border-top: 1px solid var(--ec-border-color); padding: 10px; display: flex; flex-direction: column; gap: 5px; border-radius: 0; }
+  .ec-footer input { padding: 12px; border-radius: 24px; outline: none; font-size: 16px; background-color: var(--ec-input-bg); color: var(--ec-text-color); border: 1px solid var(--ec-border-color); }
+  .ec-footer input:focus { border-color: var(--ec-primary-color); scroll-padding-bottom: 100px; }
+  .ec-header { flex-shrink: 0; border-radius: 0; }
+  @keyframes ec-mobileSlideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes ec-mobileSlideDown { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
 }
 
 /* --- Markdown Styles --- */
@@ -314,12 +346,12 @@
 .ec-close-btn:focus-visible,
 .ec-launcher:focus-visible,
 .ec-footer input:focus-visible {
-    outline: 2px solid var(--ec-primary-color);
-    outline-offset: 2px;
-    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+  outline: 2px solid var(--ec-primary-color);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
 }
 .ec-send-btn:focus:not(:focus-visible),
 .ec-close-btn:focus:not(:focus-visible),
 .ec-launcher:focus:not(:focus-visible) {
-    outline: none;
+  outline: none;
 }
