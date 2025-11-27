@@ -420,7 +420,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
             </div>
             <div className={`ec-char-counter ${getCounterClass()}`} aria-hidden="true">
               <span>{input.length}/{MAX_CHARS} {language === 'pt' ? 'caracteres' : 'characters'}</span>
-              <span>Powered by EasyChat</span>
+              <span>Powered by EasyChat 💬</span>
             </div>
           </div>
         </div>
