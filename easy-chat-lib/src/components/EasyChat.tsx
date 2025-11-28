@@ -32,8 +32,7 @@ interface EasyChatProps {
 const OFFICIAL_PROXY_URL = 'https://easy-chat-rho.vercel.app/';
 const MAX_CHARS = 100;
 
-// --- FUNÇÃO AUXILIAR DE CONTRASTE (NOVO) ---
-// Calcula se o texto deve ser preto ou branco baseado na cor de fundo (YIQ)
+// --- FUNÇÃO AUXILIAR DE CONTRASTE ---
 const getContrastingTextColor = (hexColor: string): string => {
   // Remove o # se existir
   const hex = hexColor.replace('#', '');
@@ -367,7 +366,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
             </button>
           </div>
 
-          <div className="ec-messages" role="log" aria-live="polite" aria-atomic="false">
+          <div className="ec-messages ec-whatsapp-bg" role="log" aria-live="polite" aria-atomic="false">
             {messages.map((msg, idx) => (
               msg.role !== 'system' && (
                 <div key={idx} className={`ec-message ec-message-${msg.role}`}>

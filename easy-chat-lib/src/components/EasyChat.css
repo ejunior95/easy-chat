@@ -126,12 +126,27 @@
 .ec-messages {
   flex: 1;
   padding: 15px;
-  padding-right: 10px; /* Ajuste para compensar o scrollbar novo */
+  padding-right: 10px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
   background-color: var(--ec-bg-color);
+
+  /* --- PADRÃO DE FUNDO EASYCHAT (LOGO 💬) --- */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ctext x='50%25' y='50%25' font-size='35' text-anchor='middle' dominant-baseline='central' fill='rgba(0,0,0,0.04)'%3E%F0%9F%92%AC%3C/text%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-position: center;
+}
+
+/* --- PADRÃO DE FUNDO PARA MODO ESCURO --- */
+.ec-theme-dark .ec-messages {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ctext x='50%25' y='50%25' font-size='35' text-anchor='middle' dominant-baseline='central' fill='rgba(255,255,255,0.04)'%3E%F0%9F%92%AC%3C/text%3E%3C/svg%3E");
+}
+
+/* --- OPCIONAL: ESTILO WHATSAPP (Bege) --- */
+.ec-whatsapp-bg {
+  background-color: var(--ec-secondary-bg) !important;
 }
 
 .ec-message {
@@ -145,7 +160,7 @@
 
 .ec-message-user {
   align-self: flex-end;
-  background-color: var(--ec-secondary-bg);
+  background-color: var(--ec-bg-color);
   color: var(--ec-text-color);
   border-bottom-right-radius: 2px;
 }
@@ -187,6 +202,7 @@
   flex: 1;
   padding: 12px 16px;
   border-radius: 12px;
+  margin-right: 10px;
   outline: none;
   font-size: 14px;
   background-color: var(--ec-input-bg);
@@ -328,7 +344,7 @@
   .ec-window.ec-closing { animation: ec-mobileSlideDown var(--ec-anim-duration) ease-in forwards; }
   .ec-messages { flex: 1; padding: 15px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .ec-footer { position: relative; flex-shrink: 0; background-color: var(--ec-bg-color); border-top: 1px solid var(--ec-border-color); padding: 10px; display: flex; flex-direction: column; gap: 5px; border-radius: 0; }
-  .ec-footer input { padding: 12px; border-radius: 24px; outline: none; font-size: 16px; background-color: var(--ec-input-bg); color: var(--ec-text-color); border: 1px solid var(--ec-border-color); }
+  .ec-footer input { padding: 12px; margin-right: 10px; border-radius: 12px; outline: none; font-size: 16px; background-color: var(--ec-input-bg); color: var(--ec-text-color); border: 1px solid var(--ec-border-color); }
   .ec-footer input:focus { border-color: var(--ec-primary-color); scroll-padding-bottom: 100px; }
   .ec-header { flex-shrink: 0; border-radius: 0; }
   @keyframes ec-mobileSlideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
