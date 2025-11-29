@@ -1,6 +1,7 @@
 import EasyChat from './components/EasyChat';
 
 function App() {
+  const license = import.meta.env.VITE_LICENSE_KEY;
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial' }}>
       <h1>Teste da Minha Lib: Easy Chat</h1>
@@ -31,6 +32,7 @@ function App() {
           language: 'pt',
           systemPrompt: 'Você é um assistente útil especializado em EasyChat.',
           initialMessage: "Olá! Precisa de ajuda com a EasyChat?",
+          licenseKey: license,
         }}
       />
     </div>

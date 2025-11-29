@@ -28,7 +28,7 @@ interface EasyChatProps {
   config?: EasyChatConfig;
 }
 
-const OFFICIAL_PROXY_URL = 'https://easy-chat-rho.vercel.app/';
+const OFFICIAL_PROXY_URL = 'https://easy-chat-rho.vercel.app/api';
 const MAX_CHARS = 100;
 
 // --- FUNÇÃO AUXILIAR DE CONTRASTE ---
@@ -177,7 +177,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
   const validateConfig = (): { isValid: boolean; error?: string; targetUrl?: string } => {
     const customProxy = api?.proxyUrl;
-    
+
     // CASO 1: Tem Proxy Próprio (Prioridade máxima, ignora licença)
     if (customProxy) {
       return { isValid: true, targetUrl: customProxy };
@@ -199,7 +199,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
   const fetchChatResponse = async (history: Message[], targetUrl: string): Promise<string> => {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    
+
     // Só enviamos a licenseKey se estivermos usando o Proxy Oficial ou se o usuário configurou
     if (licenseKey) {
       headers['x-license-key'] = licenseKey;
@@ -216,11 +216,11 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
     const data = await res.json();
     if (!res.ok) {
-        // Tratamento especial para erro de licença (403 ou 401)
-        if (res.status === 403 || res.status === 401) {
-            throw new Error(language === 'pt' ? 'Licença inválida ou expirada.' : 'Invalid or expired license.');
-        }
-        throw new Error(data.error || 'Erro no servidor');
+      // Tratamento especial para erro de licença (403 ou 401)
+      if (res.status === 403 || res.status === 401) {
+        throw new Error(language === 'pt' ? 'Licença inválida ou expirada.' : 'Invalid or expired license.');
+      }
+      throw new Error(data.error || 'Erro no servidor');
     }
     return data.content;
   };
@@ -329,9 +329,15 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
             </button>
           </div>
           <div className="ec-messages ec-whatsapp-bg" role="log" aria-live="polite" aria-atomic="false">
-            {messages.map((msg, idx) => (
-              msg.role !== 'system' && (
-                <div key={idx} className={`ec-message ec-message-${msg.role}`}>
+            {messages.map((msg, idx) => {
+              const isSystem = msg.role === 'system';
+
+              return (
+                <div
+                  key={idx}
+                  className={`ec-message ec-message-${msg.role}`}
+                  role={isSystem ? "alert" : "article"}
+                >
                   {msg.role === 'assistant' ? (
                     <div className="ec-markdown">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -340,51 +346,16 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
                     msg.content
                   )}
                 </div>
-              )
-            ))}
-            {messages.filter(m => m.role === 'system').map((msg, idx) => (
-              <div key={`sys-${idx}`} className="ec-message ec-message-error" role="alert">
-                {msg.content}
-              </div>
-            ))}
+              );
+            })}
+
             {isLoading && (
-              <div
-                className="ec-message ec-message-assistant"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  padding: '20px 20px',
-                  width: 'fit-content',
-                  minWidth: '60px'
-                }}
-                aria-label={language === 'pt' ? 'Digitando...' : 'Typing...'}
-                title={language === 'pt' ? 'Digitando...' : 'Typing...'}
-              >
-                <span
-                  className="ec-typing-dot"
-                  style={{
-                    backgroundColor: contrastingTextColor,
-                    animationDelay: '-0.32s'
-                  }}
-                />
-
-                <span
-                  className="ec-typing-dot"
-                  style={{
-                    backgroundColor: contrastingTextColor,
-                    animationDelay: '-0.16s'
-                  }}
-                />
-
-                <span
-                  className="ec-typing-dot"
-                  style={{
-                    backgroundColor: contrastingTextColor,
-                    animationDelay: '0s'
-                  }}
-                />
+              <div className="ec-message ec-message-assistant" style={{ padding: '20px', width: 'fit-content' }}>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <span className="ec-typing-dot" style={{ backgroundColor: contrastingTextColor, animationDelay: '-0.32s' }} />
+                  <span className="ec-typing-dot" style={{ backgroundColor: contrastingTextColor, animationDelay: '-0.16s' }} />
+                  <span className="ec-typing-dot" style={{ backgroundColor: contrastingTextColor, animationDelay: '0s' }} />
+                </div>
               </div>
             )}
             <div ref={messagesEndRef} />

@@ -30,33 +30,65 @@ function getClientIp(req: VercelRequest): string {
   return req.socket.remoteAddress || 'unknown';
 }
 
+function normalizeUrl(url?: string): string {
+  if (!url) return '';
+  // Remove protocolo (http://, https://) e barra final
+  return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+}
+
 /**
- * Verifica se a licença é válida
+ * Validação de Licença com Domain Locking
  */
-async function checkLicense(licenseKey: string, db: Db): Promise<boolean> {
-    if (!licenseKey) return false;
+async function checkLicense(licenseKey: string, origin: string, db: Db): Promise<{ valid: boolean; reason?: string }> {
+  if (!licenseKey) return { valid: false, reason: 'missing_key' };
 
-    const license = await db.collection('licenses').findOne({ 
-        key: licenseKey,
-        status: 'active' 
-    });
+  const license = await db.collection('licenses').findOne({ 
+    key: licenseKey,
+    status: 'active' 
+  });
 
-    return !!license;
+  if (!license) return { valid: false, reason: 'invalid_key' };
+
+  // --- DOMAIN LOCKING ---
+  // Se existir o array 'allowed_domains' na licença, verificamos a origem.
+  // Se o array não existir ou estiver vazio, permitimos (modo desenvolvimento ou global).
+  if (license.allowed_domains && Array.isArray(license.allowed_domains) && license.allowed_domains.length > 0) {
+    const normalizedOrigin = normalizeUrl(origin);
+    
+    // Verifica se a origem da requisição está na lista permitida
+    // Ex: normalizedOrigin = "localhost:5173"
+    // allowed_domains = ["localhost:5173", "meusite.com.br"]
+    const isAllowed = license.allowed_domains.some((domain: string) => 
+      normalizedOrigin.includes(normalizeUrl(domain))
+    );
+
+    if (!isAllowed) {
+      return { valid: false, reason: 'domain_not_allowed' };
+    }
+  }
+
+  return { valid: true };
 }
 
 function isValidContent(text: string): boolean {
   if (!text) return false;
+
   const trimmed = text.trim();
   if (trimmed.length < 2) return false;
+  
   if (/^\d+$/.test(trimmed) && trimmed.length > 6) return false;
+  
   if (/(.)\1{4,}/.test(trimmed)) return false; 
+  
   if (trimmed.length > 20 && !/\s/.test(trimmed)) return false;
+  
   const alphaOnly = trimmed.replace(/[^a-zA-Z]/g, '');
   if (alphaOnly.length > 5) {
     const vowelsCount = (alphaOnly.match(/[aeiouAEIOU]/g) || []).length;
     const ratio = vowelsCount / alphaOnly.length;
     if (ratio < 0.1) return false;
   }
+
   return true;
 }
 
@@ -102,7 +134,7 @@ export default async function handler(
 
     const db = await connectToDatabase(envMongoUri);
 
-    // --- 1. RATE LIMITING (3s por IP) ---
+    // --- 1. RATE LIMITING (2s por IP) ---
     try {
       const lastInteraction = await db.collection('interactions').findOne(
         { client_ip: clientIp },
@@ -111,7 +143,7 @@ export default async function handler(
 
       if (lastInteraction) {
         const timeDiff = Date.now() - new Date(lastInteraction.timestamp).getTime();
-        if (timeDiff < 3000) { 
+        if (timeDiff < 2000) { 
           return response.status(429).json({ 
             error: "Calma! Você está enviando mensagens muito rápido." 
           });
@@ -126,18 +158,23 @@ export default async function handler(
         return response.status(401).json({ error: "Licença não fornecida." });
     }
 
-    const isLicenseValid = await checkLicense(licenseKey, db);
+    const licenseCheck = await checkLicense(licenseKey, origin, db);
     
-    if (!isLicenseValid) {
-        // Log de tentativa falha de acesso
-        await db.collection('access_logs').insertOne({
-            timestamp: new Date(),
-            status: 'denied',
-            license_key: licenseKey,
-            client_ip: clientIp,
-            reason: 'invalid_license'
-        });
-        return response.status(403).json({ error: "Chave de licença inválida ou expirada." });
+    if (!licenseCheck.valid) {
+      // Log de Segurança
+      await db.collection('access_logs').insertOne({
+        timestamp: new Date(),
+        status: 'blocked',
+        reason: licenseCheck.reason,
+        license_key: licenseKey,
+        origin: origin,
+        client_ip: clientIp
+      });
+      
+      if (licenseCheck.reason === 'domain_not_allowed') {
+        return response.status(403).json({ error: `Domínio não autorizado: ${origin}` });
+      }
+      return response.status(403).json({ error: "Licença inválida ou expirada." });
     }
 
     // --- 3. PROCESSAMENTO DA MENSAGEM ---
@@ -151,7 +188,7 @@ export default async function handler(
     
     if (lastMessage.role === 'user' && !isValidContent(String(lastMessage.content || ''))) {
       return response.status(200).json({
-        content: "Sua mensagem parece inválida ou spam. Tente reformular."
+        content: "Sua mensagem parece inválida ou spam. Tente novamente."
       });
     }
 
@@ -185,6 +222,7 @@ export default async function handler(
       completion_tokens: usage?.completion_tokens || 0,
       total_tokens: usage?.total_tokens || 0,
       client_ip: clientIp,
+      client_user_agent: userAgent,
       client_origin: originUrl,
       status: 'success',
     });
