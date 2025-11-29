@@ -1,21 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import OpenAI from 'openai';
-import { MongoClient, Db } from 'mongodb';
-
-let cachedDb: Db | null = null;
-
-async function connectToDatabase(uri: string) {
-  if (cachedDb) return cachedDb;
-  
-  const client = await MongoClient.connect(uri, { 
-    connectTimeoutMS: 5000,
-    maxPoolSize: 10 
-  });
-  
-  const db = client.db('easychat_logs');
-  cachedDb = db;
-  return db;
-}
+import { connectToDatabase } from '../configs/database/mongo';
 
 interface ChatRequestBody {
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
