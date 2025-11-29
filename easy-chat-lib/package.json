@@ -1,7 +1,7 @@
 {
   "name": "@ejunior95/easy-chat",
   "private": false,
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "A secure, customizable, and type-safe React Chat Widget powered by OpenAI. Features built-in proxy support to protect API keys.",
   "keywords": [
     "react",
