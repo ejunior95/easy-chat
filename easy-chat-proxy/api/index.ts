@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import OpenAI from 'openai';
+import { Db } from 'mongodb';
 import { connectToDatabase } from '../configs/database/mongo';
 
 interface ChatRequestBody {
