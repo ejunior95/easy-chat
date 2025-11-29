@@ -201,8 +201,8 @@
 .ec-footer input {
   flex: 1;
   padding: 12px 16px;
-  border-radius: 12px;
-  margin-right: 10px;
+  border-radius: 8px;
+  margin-right: 5px;
   outline: none;
   font-size: 14px;
   background-color: var(--ec-input-bg);
@@ -223,7 +223,7 @@
   width: 44px;
   height: 44px;
   font-size: 18px; 
-  border-radius: 12px; 
+  border-radius: 8px; 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,16 +253,24 @@
   box-shadow: none;
 }
 
-.ec-char-counter {
-  font-size: 12px;
-  color: #999;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 4px 2px;
-  margin-top: 4px;
+.ec-labels-footer-container {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
+  width: 100%;
+  padding-top: 5px;
+}
+
+.ec-char-counter, .ec-label-company {
+  color: #999;
+  box-sizing: border-box;
+}
+.ec-char-counter {
+  font-size: 12px;
+}
+
+.ec-label-company {
+  font-size: 10px;
 }
   
 .ec-char-counter.ec-limit-near { color: #d6be0c; font-weight: bold; }
@@ -372,4 +380,25 @@
 .ec-close-btn:focus:not(:focus-visible),
 .ec-launcher:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* Animação de digitação (Bouncing Dots) */
+@keyframes ec-bounce {
+  0%, 80%, 100% { 
+    transform: translateY(0); 
+    opacity: 0.6;
+  }
+  40% { 
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+.ec-typing-dot {
+  width: 10px; 
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  
+  animation: ec-bounce 1.4s infinite ease-in-out both;
 }

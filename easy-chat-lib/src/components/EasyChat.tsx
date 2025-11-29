@@ -36,15 +36,15 @@ const MAX_CHARS = 100;
 const getContrastingTextColor = (hexColor: string): string => {
   // Remove o # se existir
   const hex = hexColor.replace('#', '');
-  
+
   // Converte para RGB
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
-  
+
   // Calcula a luminância (fórmula YIQ padrão)
   const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-  
+
   // Se for claro (>= 128), retorna preto. Senão, branco.
   return yiq >= 128 ? '#000000' : '#ffffff';
 };
@@ -113,7 +113,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
       if (window.innerWidth <= 480 && window.visualViewport) {
         setViewportHeight(window.visualViewport.height);
         setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+          messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
         }, 100);
       } else {
         setViewportHeight(undefined);
@@ -155,12 +155,12 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
         const firstElement = focusableElements[0] as HTMLElement;
         const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
 
-        if (e.shiftKey) { 
+        if (e.shiftKey) {
           if (document.activeElement === firstElement) {
             lastElement.focus();
             e.preventDefault();
           }
-        } else { 
+        } else {
           if (document.activeElement === lastElement) {
             firstElement.focus();
             e.preventDefault();
@@ -202,19 +202,19 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     const hasCustomProxy = !!api?.proxyUrl;
 
     if (hasPaidKeys && hasCustomProxy) {
-      return { 
-        isValid: false, 
-        error: language === 'pt' 
-          ? 'Erro: Conflito. Use apenas chaves de licença OU URL de proxy.' 
+      return {
+        isValid: false,
+        error: language === 'pt'
+          ? 'Erro: Conflito. Use apenas chaves de licença OU URL de proxy.'
           : 'Error: Conflict. Use only license keys OR proxy URL.'
       };
     }
     if (!hasPaidKeys && !hasCustomProxy) {
-      if (apiKey && !licenseKey) return { isValid: true, targetUrl: undefined }; 
-      return { 
-        isValid: false, 
-        error: language === 'pt' 
-          ? 'Erro: Nenhuma conexão válida (Faltam chaves ou Proxy).' 
+      if (apiKey && !licenseKey) return { isValid: true, targetUrl: undefined };
+      return {
+        isValid: false,
+        error: language === 'pt'
+          ? 'Erro: Nenhuma conexão válida (Faltam chaves ou Proxy).'
           : 'Error: No valid connection (Missing keys or Proxy).'
       };
     }
@@ -261,7 +261,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   // --- HANDLERS ---
 
   const openChat = () => { setIsOpen(true); setIsClosing(false); };
-  
+
   const closeChat = () => {
     setIsClosing(true);
     setTimeout(() => { setIsOpen(false); setIsClosing(false); }, 300);
@@ -272,21 +272,21 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
     // --- PLAYGROUND LOGIC ---
     if (isPlayground) {
-        const userText = input;
-        setInput('');
-        setIsLoading(true);
-        setMessages(prev => [...prev, { role: 'user', content: userText }]);
+      const userText = input;
+      setInput('');
+      setIsLoading(true);
+      setMessages(prev => [...prev, { role: 'user', content: userText }]);
 
-        setTimeout(() => {
-            setMessages(prev => [...prev, { 
-                role: 'assistant', 
-                content: language === 'pt' 
-                    ? "✨ **Modo Demonstração:** Olá! No site oficial do EasyChat, eu simulo uma resposta para você ver como sou bonito e rápido. Em sua aplicação real, aqui apareceria a resposta da Inteligência Artificial."
-                    : "✨ **Demo Mode:** Hello! On the EasyChat website, I simulate a response so you can see how fast and pretty I am. In your real app, the AI response would appear here."
-            }]);
-            setIsLoading(false);
-        }, 1500);
-        return; 
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: language === 'pt'
+            ? "✨ **Modo Demonstração:** Olá! No site oficial do EasyChat, eu simulo uma resposta para você ver como sou bonito e rápido. Em sua aplicação real, aqui apareceria a resposta da Inteligência Artificial."
+            : "✨ **Demo Mode:** Hello! On the EasyChat website, I simulate a response so you can see how fast and pretty I am. In your real app, the AI response would appear here."
+        }]);
+        setIsLoading(false);
+      }, 1500);
+      return;
     }
 
     const validation = validateConfig();
@@ -327,13 +327,13 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   // Calculamos a cor do texto (preto ou branco) baseada na cor primária
   const contrastingTextColor = getContrastingTextColor(primaryColor);
 
-  const customStyle = { 
+  const customStyle = {
     '--ec-primary-color': primaryColor,
     '--ec-primary-text-color': contrastingTextColor, // Nova variável CSS
   } as React.CSSProperties;
 
-  const windowStyle: React.CSSProperties = viewportHeight 
-    ? { height: `${viewportHeight}px`, maxHeight: `${viewportHeight}px`, bottom: 0, borderRadius: 0 } 
+  const windowStyle: React.CSSProperties = viewportHeight
+    ? { height: `${viewportHeight}px`, maxHeight: `${viewportHeight}px`, bottom: 0, borderRadius: 0 }
     : {};
   const themeClass = getThemeClass();
 
@@ -342,8 +342,8 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     <div className={`ec-container ec-${position} ${themeClass}`} style={customStyle}>
 
       {(isOpen || isClosing) && (
-        <div 
-          className={`ec-window ${isClosing ? 'ec-closing' : ''}`} 
+        <div
+          className={`ec-window ${isClosing ? 'ec-closing' : ''}`}
           ref={chatWindowRef}
           style={windowStyle}
           role="dialog"
@@ -380,7 +380,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
                 </div>
               )
             ))}
-            
+
             {messages.filter(m => m.role === 'system').map((msg, idx) => (
               <div key={`sys-${idx}`} className="ec-message ec-message-error" role="alert">
                 {msg.content}
@@ -388,8 +388,43 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
             ))}
 
             {isLoading && (
-              <div className="ec-message ec-message-assistant" aria-label={language === 'pt' ? 'Digitando...' : 'Typing...'}>
-                <span aria-hidden="true">{language === 'pt' ? 'Digitando...' : 'Typing...'}</span>
+              <div
+                className="ec-message ec-message-assistant"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  padding: '20px 20px',
+                  width: 'fit-content',
+                  minWidth: '60px'
+                }}
+                aria-label={language === 'pt' ? 'Digitando...' : 'Typing...'}
+                title={language === 'pt' ? 'Digitando...' : 'Typing...'}
+              >
+                <span
+                  className="ec-typing-dot"
+                  style={{
+                    backgroundColor: contrastingTextColor,
+                    animationDelay: '-0.32s'
+                  }}
+                />
+
+                <span
+                  className="ec-typing-dot"
+                  style={{
+                    backgroundColor: contrastingTextColor,
+                    animationDelay: '-0.16s'
+                  }}
+                />
+
+                <span
+                  className="ec-typing-dot"
+                  style={{
+                    backgroundColor: contrastingTextColor,
+                    animationDelay: '0s'
+                  }}
+                />
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -408,27 +443,27 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
                 disabled={isLoading}
                 aria-label={language === 'pt' ? 'Mensagem para o assistente' : 'Message to assistant'}
               />
-              <button 
+              <button
                 className="ec-send-btn"
-                onClick={handleSend} 
+                onClick={handleSend}
                 disabled={isLoading || !input.trim()}
                 aria-label={language === 'pt' ? 'Enviar mensagem' : 'Send message'}
               >
-                 ➤
+                ➤
               </button>
             </div>
-            <div className={`ec-char-counter ${getCounterClass()}`} aria-hidden="true">
-              <span>{input.length}/{MAX_CHARS} {language === 'pt' ? 'caracteres' : 'characters'}</span>
-              <span>Powered by EasyChat 💬</span>
+            <div className='ec-labels-footer-container'>
+              <span className={`ec-char-counter ${getCounterClass()}`} aria-hidden="true">{input.length}/{MAX_CHARS} {language === 'pt' ? 'caracteres' : 'characters'}</span>
+              <span className='ec-label-company'>Powered by EasyChat 💬</span>
             </div>
           </div>
         </div>
       )}
 
       {!isOpen && !isClosing && (
-        <button 
+        <button
           ref={launcherRef}
-          className="ec-launcher" 
+          className="ec-launcher"
           onClick={openChat}
           aria-label={language === 'pt' ? 'Abrir chat' : 'Open chat'}
           aria-haspopup="dialog"
