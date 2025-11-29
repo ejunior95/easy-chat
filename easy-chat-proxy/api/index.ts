@@ -172,7 +172,7 @@ export default async function handler(
       });
       
       if (licenseCheck.reason === 'domain_not_allowed') {
-        return response.status(403).json({ error: `Domínio não autorizado: ${origin}` });
+        return response.status(403).json({ error: `Domínio não autorizado: ${originUrl}` });
       }
       return response.status(403).json({ error: "Licença inválida ou expirada." });
     }
