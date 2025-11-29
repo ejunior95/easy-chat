@@ -158,7 +158,7 @@ export default async function handler(
         return response.status(401).json({ error: "Licença não fornecida." });
     }
 
-    const licenseCheck = await checkLicense(licenseKey, origin, db);
+    const licenseCheck = await checkLicense(licenseKey, originUrl, db);
     
     if (!licenseCheck.valid) {
       // Log de Segurança
@@ -167,7 +167,7 @@ export default async function handler(
         status: 'blocked',
         reason: licenseCheck.reason,
         license_key: licenseKey,
-        origin: origin,
+        origin: originUrl,
         client_ip: clientIp
       });
       
