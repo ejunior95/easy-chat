@@ -7,23 +7,21 @@ function App() {
       <p>O botão deve aparecer no canto inferior direito.</p>
       <p>Tente conversar com ele!</p>
 
-      {/* Instanciando o chat */}
+      {/* Instanciando o chat playground */}
       <EasyChat
         config={{
           title: "Playground EasyBot 🤖",
           position: "bottom-left",
           primaryColor: "#ff0000ff",
-          theme: "light",
+          theme: "dark",
           language: 'pt',
           systemPrompt: 'Você é um assistente útil especializado em EasyChat.',
           initialMessage: "Olá! Precisa de ajuda com a EasyChat?",
           // @ts-ignore
           isPlayground: true,
-          api: {
-            proxyUrl: "https://easy-chat-rho.vercel.app/api",
-          }
         }}
       />
+      {/* Instanciando o chat real */}
       <EasyChat
         config={{
           title: "EasyBot 🤖",
@@ -33,9 +31,6 @@ function App() {
           language: 'pt',
           systemPrompt: 'Você é um assistente útil especializado em EasyChat.',
           initialMessage: "Olá! Precisa de ajuda com a EasyChat?",
-          api: {
-            proxyUrl: "https://easy-chat-rho.vercel.app/api",
-          }
         }}
       />
     </div>

@@ -16,7 +16,6 @@ export interface EasyChatConfig {
   systemPrompt?: string;
   theme?: 'light' | 'dark' | 'system';
   language?: 'en' | 'pt';
-  apiKey?: string;
   licenseKey?: string;
   onHistoryChange?: (messages: Message[]) => void;
   api?: {
@@ -34,23 +33,15 @@ const MAX_CHARS = 100;
 
 // --- FUNÇÃO AUXILIAR DE CONTRASTE ---
 const getContrastingTextColor = (hexColor: string): string => {
-  // Remove o # se existir
   const hex = hexColor.replace('#', '');
-
-  // Converte para RGB
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
-
-  // Calcula a luminância (fórmula YIQ padrão)
   const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-
-  // Se for claro (>= 128), retorna preto. Senão, branco.
   return yiq >= 128 ? '#000000' : '#ffffff';
 };
 
 const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
-  // --- CONFIGURAÇÃO ---
   const {
     position = 'bottom-right',
     title = 'EasyChat',
@@ -59,7 +50,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     systemPrompt = 'Você é um assistente útil.',
     theme = 'system',
     language = 'pt',
-    apiKey,
     licenseKey,
     onHistoryChange,
     api,
@@ -79,7 +69,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     { role: 'assistant', content: initialMessage }
   ]);
 
-  // --- REFS ---
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -87,12 +76,9 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
   const titleId = 'easy-chat-title';
 
-  // --- EFEITOS (LÓGICA) ---
-
+  // --- EFEITOS ---
   useEffect(() => {
-    if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
+    if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen, viewportHeight]);
 
   useEffect(() => {
@@ -136,13 +122,9 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     };
   }, [isOpen]);
 
-  // --- ACESSIBILIDADE & UX ---
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-    } else if (!isOpen && !isClosing) {
-      setTimeout(() => launcherRef.current?.focus(), 0);
-    }
+    if (isOpen) setTimeout(() => inputRef.current?.focus(), 50);
+    else if (!isOpen && !isClosing) setTimeout(() => launcherRef.current?.focus(), 0);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
@@ -176,17 +158,12 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     function handleClickOutside(event: MouseEvent) {
       if (isOpen && chatWindowRef.current && !chatWindowRef.current.contains(event.target as Node)) {
         const target = event.target as HTMLElement;
-        if (!target.closest('.ec-launcher')) {
-          closeChat();
-        }
+        if (!target.closest('.ec-launcher')) closeChat();
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
-
-
-  // --- FUNÇÕES AUXILIARES ---
 
   const getThemeClass = () => {
     if (theme === 'dark') return 'ec-theme-dark';
@@ -196,72 +173,59 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     }
     return '';
   };
+  // --- VALIDAÇÃO & LÓGICA DE ENVIO ---
 
   const validateConfig = (): { isValid: boolean; error?: string; targetUrl?: string } => {
-    const hasPaidKeys = !!apiKey && !!licenseKey;
-    const hasCustomProxy = !!api?.proxyUrl;
+    const customProxy = api?.proxyUrl;
+    
+    // CASO 1: Tem Proxy Próprio (Prioridade máxima, ignora licença)
+    if (customProxy) {
+      return { isValid: true, targetUrl: customProxy };
+    }
 
-    if (hasPaidKeys && hasCustomProxy) {
-      return {
-        isValid: false,
-        error: language === 'pt'
-          ? 'Erro: Conflito. Use apenas chaves de licença OU URL de proxy.'
-          : 'Error: Conflict. Use only license keys OR proxy URL.'
-      };
+    // CASO 2: Não tem Proxy, então OBRIGATORIAMENTE precisa de LicenseKey
+    if (licenseKey) {
+      return { isValid: true, targetUrl: OFFICIAL_PROXY_URL };
     }
-    if (!hasPaidKeys && !hasCustomProxy) {
-      if (apiKey && !licenseKey) return { isValid: true, targetUrl: undefined };
-      return {
-        isValid: false,
-        error: language === 'pt'
-          ? 'Erro: Nenhuma conexão válida (Faltam chaves ou Proxy).'
-          : 'Error: No valid connection (Missing keys or Proxy).'
-      };
-    }
-    const targetUrl = hasPaidKeys ? OFFICIAL_PROXY_URL : api!.proxyUrl;
-    return { isValid: true, targetUrl };
+
+    // CASO 3: Sem nada
+    return {
+      isValid: false,
+      error: language === 'pt'
+        ? 'Erro de Configuração: É necessário uma chave de licença ou uma URL de proxy.'
+        : 'Config Error: A license key or proxy URL is required.'
+    };
   };
 
-  const fetchChatResponse = async (history: Message[], targetUrl?: string): Promise<string> => {
-    if (targetUrl) {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (apiKey) headers['x-custom-api-key'] = apiKey;
-      if (licenseKey) headers['x-license-key'] = licenseKey;
-
-      const res = await fetch(targetUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          messages: history.filter(m => m.role !== 'system'),
-          systemPrompt
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro no servidor');
-      return data.content;
-    } else if (apiKey) {
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [{ role: 'system', content: systemPrompt }, ...history]
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || 'Erro na OpenAI');
-      return data.choices[0].message.content;
+  const fetchChatResponse = async (history: Message[], targetUrl: string): Promise<string> => {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    
+    // Só enviamos a licenseKey se estivermos usando o Proxy Oficial ou se o usuário configurou
+    if (licenseKey) {
+      headers['x-license-key'] = licenseKey;
     }
-    throw new Error('Configuração inválida.');
-  };
 
-  // --- HANDLERS ---
+    const res = await fetch(targetUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        messages: history.filter(m => m.role !== 'system'),
+        systemPrompt
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+        // Tratamento especial para erro de licença (403 ou 401)
+        if (res.status === 403 || res.status === 401) {
+            throw new Error(language === 'pt' ? 'Licença inválida ou expirada.' : 'Invalid or expired license.');
+        }
+        throw new Error(data.error || 'Erro no servidor');
+    }
+    return data.content;
+  };
 
   const openChat = () => { setIsOpen(true); setIsClosing(false); };
-
   const closeChat = () => {
     setIsClosing(true);
     setTimeout(() => { setIsOpen(false); setIsClosing(false); }, 300);
@@ -270,13 +234,11 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-    // --- PLAYGROUND LOGIC ---
     if (isPlayground) {
       const userText = input;
       setInput('');
       setIsLoading(true);
       setMessages(prev => [...prev, { role: 'user', content: userText }]);
-
       setTimeout(() => {
         setMessages(prev => [...prev, {
           role: 'assistant',
@@ -291,7 +253,7 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
 
     const validation = validateConfig();
 
-    if (!validation.isValid) {
+    if (!validation.isValid || !validation.targetUrl) {
       setMessages(prev => [...prev, { role: 'user', content: input }]);
       setTimeout(() => setMessages(prev => [...prev, { role: 'system', content: `🚫 ${validation.error}` }]), 200);
       setInput('');
@@ -323,13 +285,10 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     return '';
   };
 
-  // --- ESTILOS DINÂMICOS ---
-  // Calculamos a cor do texto (preto ou branco) baseada na cor primária
   const contrastingTextColor = getContrastingTextColor(primaryColor);
-
   const customStyle = {
     '--ec-primary-color': primaryColor,
-    '--ec-primary-text-color': contrastingTextColor, // Nova variável CSS
+    '--ec-primary-text-color': contrastingTextColor,
   } as React.CSSProperties;
 
   const windowStyle: React.CSSProperties = viewportHeight
@@ -337,10 +296,15 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
     : {};
   const themeClass = getThemeClass();
 
-  // --- RENDER ---
+  // const getThemeClass = () => {
+  //     if (theme === 'dark') return 'ec-theme-dark';
+  //     if (theme === 'light') return '';
+  //     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'ec-theme-dark';
+  //     return '';
+  // };
+
   return (
     <div className={`ec-container ec-${position} ${themeClass}`} style={customStyle}>
-
       {(isOpen || isClosing) && (
         <div
           className={`ec-window ${isClosing ? 'ec-closing' : ''}`}
@@ -358,14 +322,12 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
               aria-label={language === 'pt' ? 'Fechar chat' : 'Close chat'}
               title={language === 'pt' ? 'Fechar' : 'Close'}
             >
-              {/* Ícone SVG de Fechar mais bonito */}
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
             </button>
           </div>
-
           <div className="ec-messages ec-whatsapp-bg" role="log" aria-live="polite" aria-atomic="false">
             {messages.map((msg, idx) => (
               msg.role !== 'system' && (
@@ -380,13 +342,11 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
                 </div>
               )
             ))}
-
             {messages.filter(m => m.role === 'system').map((msg, idx) => (
               <div key={`sys-${idx}`} className="ec-message ec-message-error" role="alert">
                 {msg.content}
               </div>
             ))}
-
             {isLoading && (
               <div
                 className="ec-message ec-message-assistant"
@@ -429,7 +389,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
             )}
             <div ref={messagesEndRef} />
           </div>
-
           <div className="ec-footer">
             <div className="ec-input-wrapper">
               <input
@@ -459,7 +418,6 @@ const EasyChat: React.FC<EasyChatProps> = ({ config }) => {
           </div>
         </div>
       )}
-
       {!isOpen && !isClosing && (
         <button
           ref={launcherRef}
