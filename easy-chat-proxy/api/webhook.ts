@@ -16,6 +16,15 @@ function generateLicenseKey() {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS ---
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-license-key');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') return res.status(405).end();
 
   const buf = await buffer(req);
@@ -32,11 +41,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
-    
+
     // Recuperar dados
     const targetDomain = session.metadata?.target_domain;
     const customerEmail = session.customer_details?.email;
-    
+
     if (targetDomain) {
       const db = await connectToDatabase(process.env.MONGODB_URI as string);
       const newLicenseKey = generateLicenseKey();
@@ -48,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: 'active',
         plan: 'pro',
         created_at: new Date(),
-        allowed_domains: [targetDomain, 'localhost', '127.0.0.1'], 
+        allowed_domains: [targetDomain, 'localhost', '127.0.0.1'],
         stripe_session_id: session.id
       });
 
