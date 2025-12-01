@@ -3,6 +3,7 @@ import { buffer } from 'micro';
 import Stripe from 'stripe';
 import crypto from 'crypto';
 import { connectToDatabase } from '../configs/database/mongo';
+import { runCorsMiddleware } from './cors';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
@@ -16,16 +17,7 @@ function generateLicenseKey() {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS ---
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-license-key');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') return res.status(405).end();
+  if (runCorsMiddleware(req, res)) return;
 
   const buf = await buffer(req);
   const sig = req.headers['stripe-signature'] as string;
