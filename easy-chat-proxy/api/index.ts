@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import OpenAI from 'openai';
 import { Db } from 'mongodb';
 import { connectToDatabase } from '../configs/database/mongo';
+import { runCorsMiddleware } from './cors';
 
 interface ChatRequestBody {
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
@@ -91,18 +92,8 @@ export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
 ) {
-
-  response.setHeader('Access-Control-Allow-Origin', '*');
-  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-license-key');
-
-  if (request.method === 'OPTIONS') {
-    return response.status(200).end();
-  }
-
-  if (request.method !== 'POST') {
-    return response.status(405).json({ error: 'Method not allowed' });
-  }
+  
+  if (runCorsMiddleware(request, response)) return;
 
   const envMongoUri = process.env.MONGODB_URI;
   const envOpenAiKey = process.env.OPENAI_API_KEY;
